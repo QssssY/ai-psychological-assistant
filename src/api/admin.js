@@ -62,3 +62,19 @@ export function updateArticle(id, data) {
     data,
   })
 }
+
+// 改变情感文章状态
+export function changeArticleStatus(id, data) {
+  return service({
+    url: `/knowledge/article/${id}/status`,
+    method: 'put',
+    data
+  })
+}
+
+export function deleteArticle(id) {
+  return service({
+    url: `/knowledge/article/${id}`,
+    method: 'delete',
+  })
+}

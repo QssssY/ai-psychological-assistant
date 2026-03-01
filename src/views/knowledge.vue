@@ -35,13 +35,23 @@
             <el-button
               v-if="scope.row.status === 0 || scope.row.status === 2"
               type="success"
+              @click="handlePublish(scope.row)"
               text
               >发布</el-button
             >
-            <el-button v-if="scope.row.status === 1" type="warning" text
+            <el-button
+              v-if="scope.row.status === 1"
+              type="warning"
+              text
+              @click="handleOffline(scope.row)"
               >下线</el-button
             >
-            <el-button type="danger" text>删除</el-button>
+            <el-button
+              type="danger"
+              text
+              @click="handleDeleteArticle(scope.row)"
+              >删除</el-button
+            >
           </div>
         </template>
       </el-table-column>
@@ -66,10 +76,13 @@
 import { onMounted, reactive, ref } from "vue";
 import PageHead from "@/components/PageHead.vue";
 import TableSearch from "@/components/TableSearch.vue";
+import { ElMessageBox, ElMessage } from "element-plus";
 import {
   getCategoryTree,
   getKnowledgeList,
   getArticleDetail,
+  changeArticleStatus,
+  deleteArticle,
 } from "@/api/admin";
 import ArticleDialog from "@/components/ArticleDialog.vue";
 
@@ -180,6 +193,56 @@ const handleSuccess = () => {
   dialogVisible.value = false;
   // 刷新情感知识列表
   handleSearch();
+};
+
+// 发布情感文章
+const handlePublish = (row) => {
+  // 确认发布
+  ElMessageBox.confirm(`确定发布文章“${row.title}”吗？`, "确认发布", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    // 发布文章
+    changeArticleStatus(row.id, { status: 1 }).then(() => {
+      ElMessage.success("发布成功");
+      // 刷新情感知识列表
+      handleSearch();
+    });
+  });
+};
+
+// 下线情感文章
+const handleOffline = (row) => {
+  // 确认下线
+  ElMessageBox.confirm(`确定下线文章“${row.title}”吗？`, "确认下线", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(() => {
+    // 下线文章
+    changeArticleStatus(row.id, { status: 2 }).then(() => {
+      ElMessage.success("下线成功");
+      // 刷新情感知识列表
+      handleSearch();
+    });
+  });
+};
+
+const handleDeleteArticle = (row) => {
+  // 确认删除
+  ElMessageBox.confirm(`确定删除文章“${row.title}”吗？`, "确认删除", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "danger",
+  }).then(async () => {
+    // 删除文章
+    deleteArticle(row.id).then((res) => {
+      ElMessage.success("删除成功");
+      // 刷新情感知识列表
+      handleSearch();
+    });
+  });
 };
 
 onMounted(() => {
