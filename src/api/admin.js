@@ -48,3 +48,8 @@ export const createArticle = (data) => {
     data,
   })
 }
+
+// 获取情感文章详情
+export function getArticleDetail(id) {
+  return service.get(`/knowledge/article/${id}`)
+}

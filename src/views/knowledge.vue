@@ -2,7 +2,7 @@
   <div>
     <PageHead title="情感知识">
       <template #btns>
-        <el-button type="primary" @click="dialogVisible = true">新增</el-button>
+        <el-button type="primary" @click="handleEdit({})">新增</el-button>
       </template>
     </PageHead>
     <TableSearch :formItem="formItem" @search="handleSearch" />
@@ -29,7 +29,9 @@
       <el-table-column label="操作" fixed="right" width="200">
         <template #default="scope">
           <div class="el-table-column-style">
-            <el-button type="primary" text>编辑</el-button>
+            <el-button type="primary" text @click="handleEdit(scope.row)"
+              >编辑</el-button
+            >
             <el-button
               v-if="scope.row.status === 0 || scope.row.status === 2"
               type="success"
@@ -52,6 +54,7 @@
       @change="handlePageChange"
     />
     <ArticleDialog
+      :article="currentArticle"
       v-model:modelValue="dialogVisible"
       :categories="categories"
       @success="handleSuccess"
@@ -63,7 +66,11 @@
 import { onMounted, reactive, ref } from "vue";
 import PageHead from "@/components/PageHead.vue";
 import TableSearch from "@/components/TableSearch.vue";
-import { getCategoryTree, getKnowledgeList } from "@/api/admin";
+import {
+  getCategoryTree,
+  getKnowledgeList,
+  getArticleDetail,
+} from "@/api/admin";
 import ArticleDialog from "@/components/ArticleDialog.vue";
 
 //分类映射
@@ -149,6 +156,22 @@ const handleSearch = async (formData) => {
   const { records, total } = await getKnowledgeList(params);
   tableData.value = records || [];
   pagination.total = total || 0;
+};
+
+// 当前编辑的文章
+const currentArticle = ref(null);
+// 编辑情感文章
+const handleEdit = async (row) => {
+  if (!row.id) {
+    // 打开弹窗
+    dialogVisible.value = true;
+    // 清空当前文章
+    currentArticle.value = null;
+  } else {
+    const res = await getArticleDetail(row.id);
+    currentArticle.value = res;
+    dialogVisible.value = true;
+  }
 };
 
 // 弹窗提交成功处理函数

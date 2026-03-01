@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    title="文章详细"
+    :title="isEdit ? '编辑文章' : '新增文章'"
     v-model="visible"
     width="50%"
     @close="closeDialog"
@@ -73,7 +73,7 @@
             <img v-else :src="imgUrl" alt="封面图片" class="cover-image" />
           </el-upload>
           <div v-if="imgUrl" class="cover-remove">
-            <el-button type="danger" size="mini" @click="handleRemove"
+            <el-button type="danger" size="small" @click="handleRemove"
               >移除封面</el-button
             >
           </div>
@@ -99,16 +99,16 @@
         btnPreview ? "隐藏预览" : "预览效果"
       }}</el-button>
       <el-button @click="closeDialog">取消</el-button>
-      <el-button type="primary" @click="handleSubmit" :loading="loading"
-        >提交</el-button
-      >
+      <el-button type="primary" @click="handleSubmit" :loading="loading">{{
+        isEdit ? "更新文章" : "新增文章"
+      }}</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup>
 import { ElMessage } from "element-plus";
-import { computed, reactive, ref, nextTick } from "vue";
+import { computed, reactive, ref, nextTick, watch } from "vue";
 import { uploadFile, createArticle } from "@/api/admin";
 import { fileBaseURL } from "@/config/index.js";
 import RichTextEditor from "@/components/RichTextEditor.vue";
@@ -119,6 +119,8 @@ const imgUrl = ref("");
 const btnPreview = ref(false);
 // 提交按钮是否加载中
 const loading = ref(false);
+// 是否为编辑模式
+const isEdit = computed(() => !!props.article?.id);
 // 定义表单数据
 const formData = reactive({
   title: "",
@@ -174,6 +176,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  article: {
+    type: Object,
+    default: null,
+  },
 });
 // 定义事件，用于关闭弹窗
 const emit = defineEmits(["update:modelValue", "success"]);
@@ -187,8 +193,18 @@ const visible = computed({
   },
 });
 
-// 关闭弹窗
-const closeDialog = () => {};
+// 取消和关闭
+const closeDialog = () => {
+  // 重置表单数据
+  formRef.value.resetFields();
+  //重置id
+  businessId.value = null;
+  //重置标签
+  formData.tagArray = [];
+  // 重置封面图片URL和数据
+  handleRemove();
+  emit("update:modelValue", false);
+};
 
 // 对上传封面图片的文件进行校验
 const beforeUpload = (file) => {
@@ -212,15 +228,32 @@ const handleRemove = () => {
   formData.coverImage = "";
 };
 
+// 监听文章数据变化，更新表单数据,数据回显
+watch(
+  () => props.article,
+  (newVal) => {
+    if (newVal) {
+      nextTick(() => {
+        Object.assign(formData, newVal);
+        // 使用现有业务ID
+        businessId.value = newVal.id;
+        // 回显封面图片URL
+        imgUrl.value = fileBaseURL + newVal.coverImage;
+      });
+    }
+  }
+);
+
+// 业务ID
+const businessId = ref(null);
 // 上传封面图片的请求处理函数
 const handleUploadRequest = async ({ file }) => {
   // 处理上传请求，将文件上传到服务器
-
   // 生成随机的业务ID
-  const businessId = crypto.randomUUID();
+  businessId.value = crypto.randomUUID();
 
   const res = await uploadFile(file, {
-    businessId: businessId,
+    businessId: businessId.value,
   });
   // 上传成功后，将文件路径赋值给formData.coverImage
   imgUrl.value = fileBaseURL + res.filePath;
@@ -240,7 +273,7 @@ const handleContentCreated = (editor) => {
   if (formData.content && editor) {
     nextTick(() => {
       // 将已有内容设置到编辑器中
-      editor.setHTML(formData.content);
+      editor.setHtml(formData.content);
     });
   }
 };
