@@ -109,7 +109,7 @@
 <script setup>
 import { ElMessage } from "element-plus";
 import { computed, reactive, ref, nextTick, watch } from "vue";
-import { uploadFile, createArticle } from "@/api/admin";
+import { uploadFile, createArticle, updateArticle } from "@/api/admin";
 import { fileBaseURL } from "@/config/index.js";
 import RichTextEditor from "@/components/RichTextEditor.vue";
 
@@ -279,7 +279,7 @@ const handleContentCreated = (editor) => {
 };
 
 const formRef = ref();
-// 提交表单
+// 提交表单或者更新文章
 const handleSubmit = () => {
   // 校验表单数据
   formRef.value.validate((valid) => {
@@ -290,13 +290,26 @@ const handleSubmit = () => {
         tags: formData.tagArray.join(","),
       };
       delete submitData.tagArray;
-      //提交表单数据
-      createArticle(submitData).then((res) => {
-        loading.value = false;
-        ElMessage.success("文章发布成功");
-        // 触发成功事件
-        emit("success");
-      });
+
+      // 如果不是编辑状态，提交表单数据
+      if (!isEdit.value) {
+        submitData.id = businessId.value;
+        //提交表单数据
+        createArticle(submitData).then((res) => {
+          loading.value = false;
+          // 触发成功事件
+          emit("success");
+          ElMessage.success("文章发布成功");
+        });
+      } else {
+        // 更新文章
+        updateArticle(props.article.id, submitData).then((res) => {
+          loading.value = false;
+          // 触发成功事件
+          emit("success");
+          ElMessage.success("文章更新成功");
+        });
+      }
     } else {
       ElMessage.error("请填写完整的文章信息");
     }

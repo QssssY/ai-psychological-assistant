@@ -179,7 +179,7 @@ const handleSuccess = () => {
   // 关闭弹窗
   dialogVisible.value = false;
   // 刷新情感知识列表
-  handleSearch({});
+  handleSearch();
 };
 
 onMounted(() => {

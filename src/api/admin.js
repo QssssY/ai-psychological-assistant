@@ -53,3 +53,12 @@ export const createArticle = (data) => {
 export function getArticleDetail(id) {
   return service.get(`/knowledge/article/${id}`)
 }
+
+// 更新情感文章
+export function updateArticle(id, data) {
+  return service({
+    url: `/knowledge/article/${id}`,
+    method: 'put',
+    data,
+  })
+}
