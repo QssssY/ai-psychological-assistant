@@ -6,7 +6,11 @@
       </template>
     </PageHead>
     <TableSearch :formItem="formItem" @search="handleSearch" />
-    <el-table :data="tableData" style="width: 100%; margin-top: 25px">
+    <el-table
+      :data="tableData"
+      style="width: 100%; margin-top: 25px"
+      v-loading="loading"
+    >
       <el-table-column label="文章标题" fixed="left" width="400">
         <template #default="scope">
           <div class="el-table-column-style">
@@ -94,6 +98,8 @@ const categories = ref([]);
 const tableData = ref([]);
 //弹窗是否显示
 const dialogVisible = ref(false);
+//加载状态
+const loading = ref(false);
 //分页信息
 const pagination = reactive({
   total: 0,
@@ -161,14 +167,19 @@ const getCategory = async () => {
 
 //获取情感知识列表
 const handleSearch = async (formData) => {
-  //请求参数
-  const params = {
-    ...formData,
-    ...pagination,
-  };
-  const { records, total } = await getKnowledgeList(params);
-  tableData.value = records || [];
-  pagination.total = total || 0;
+  loading.value = true;
+  try {
+    //请求参数
+    const params = {
+      ...formData,
+      ...pagination,
+    };
+    const { records, total } = await getKnowledgeList(params);
+    tableData.value = records || [];
+    pagination.total = total || 0;
+  } finally {
+    loading.value = false;
+  }
 };
 
 // 当前编辑的文章

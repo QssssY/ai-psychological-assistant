@@ -72,9 +72,24 @@ export function changeArticleStatus(id, data) {
   })
 }
 
+// 删除情感文章
 export function deleteArticle(id) {
   return service({
     url: `/knowledge/article/${id}`,
     method: 'delete',
   })
+}
+
+// 获取咨询记录列表
+export function getConsultationList(params) {
+  return service({
+    url: '/psychological-chat/sessions',
+    method: 'get',
+    params,
+  })
+}
+
+// 获取咨询记录详情
+export function getSessionDetail(sessionId) {
+  return service.get(`/psychological-chat/sessions/${sessionId}/messages`)
 }
