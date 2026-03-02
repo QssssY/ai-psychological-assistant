@@ -93,3 +93,19 @@ export function getConsultationList(params) {
 export function getSessionDetail(sessionId) {
   return service.get(`/psychological-chat/sessions/${sessionId}/messages`)
 }
+
+// 获取情感日志列表
+export function getEmotionalLogList(params) {
+  return service({
+    url: '/emotion-diary/admin/page',
+    method: 'get',
+    params,
+  })
+}
+// 删除情绪日志
+export function deleteEmotionalLog(id) {
+  return service({
+    url: `/emotion-diary/admin/${id}`,
+    method: 'delete',
+  })
+}
