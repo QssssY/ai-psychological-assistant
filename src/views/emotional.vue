@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageHead title="情感日志" />
+    <PageHead title="情绪日志" />
     <TableSearch :formItem="formItem" @search="handleSearch" />
     <el-table
       :data="tableData"

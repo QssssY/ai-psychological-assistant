@@ -28,7 +28,7 @@ const backendRoutes = [
         path: 'knowledge',
         component: knowledge,
         meta: {
-          title: '情感知识',
+          title: '知识文章',
           icon: 'ChatLineSquare',
         }
       },
@@ -44,7 +44,7 @@ const backendRoutes = [
         path: 'emotional',
         component: emotional,
         meta: {
-          title: '情感日志',
+          title: '情绪日志',
           icon: 'User',
         }
       },

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageHead title="情感知识">
+    <PageHead title="知识文章">
       <template #btns>
         <el-button type="primary" @click="handleEdit({})">新增</el-button>
       </template>
@@ -11,7 +11,7 @@
       style="width: 100%; margin-top: 25px"
       v-loading="loading"
     >
-      <el-table-column label="文章标题" fixed="left" width="400">
+      <el-table-column label="文章标题" fixed="left">
         <template #default="scope">
           <div class="el-table-column-style">
             <el-icon><timer /></el-icon>
@@ -29,8 +29,8 @@
       </el-table-column>
       <el-table-column label="作者" prop="authorName" width="150" />
       <el-table-column label="阅读量" prop="readCount" width="150" />
-      <el-table-column label="发布时间" prop="updatedAt" width="150" />
-      <el-table-column label="操作" fixed="right" width="200">
+      <el-table-column label="发布时间" prop="updatedAt" width="250" />
+      <el-table-column label="操作" fixed="right">
         <template #default="scope">
           <div class="el-table-column-style">
             <el-button type="primary" text @click="handleEdit(scope.row)"

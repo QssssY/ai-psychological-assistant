@@ -109,3 +109,11 @@ export function deleteEmotionalLog(id) {
     method: 'delete',
   })
 }
+
+// 获取数据分析概览
+export function getDataAnalyticsOverview() {
+  return service({
+    url: '/data-analytics/overview',
+    method: 'get',
+  })
+}
