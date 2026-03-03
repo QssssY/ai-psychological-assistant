@@ -117,3 +117,8 @@ export function getDataAnalyticsOverview() {
     method: 'get',
   })
 }
+
+//退出登录
+export function logout() {
+  return service.post('/user/logout')
+}

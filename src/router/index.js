@@ -14,6 +14,7 @@ import register from '@/views/register.vue'
 const backendRoutes = [
   {
     path: '/back',
+    redirect: '/back/dashboard',
     component: BackendLayout,
     children: [
       {
@@ -74,7 +75,37 @@ const backendRoutes = [
   }
 ]
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes: backendRoutes
 })
+
+//路由前置守卫
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token")
+  //判断用户是否登录
+  if (token) {
+    //用户登录后根据用户类型判断是否跳转到对应页面
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"))
+    //用户类型为2（管理员）则跳转到后台路由
+    if (userInfo.userType === 2) {
+      if (to.path.startsWith("/back")) {
+        next();
+      } else {
+        next("/back/dashboard");
+      }
+    } else if (userInfo.userType === 1) {
+
+    }
+  } else {
+    //用户未登录则判断是否访问后台路由
+    if (to.path.startsWith("/back")) {
+      //如果访问后台路由则跳转到登录页
+      next("/auth/login");
+    } else {
+      next();
+    }
+  }
+});
+
+export default router
