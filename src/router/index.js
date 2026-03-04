@@ -7,6 +7,11 @@ import emotional from '@/views/emotional.vue'
 import AuthLayout from '@/components/AuthLayout.vue'
 import login from '@/views/login.vue'
 import register from '@/views/register.vue'
+import FrontendLayout from '@/components/FrontendLayout.vue'
+import home from '@/views/home.vue'
+import consultation from '@/views/consultation.vue'
+import emotionDiary from '@/views/emotionDiary.vue'
+import frontendKnowledge from '@/views/frontendKnowledge.vue'
 
 
 
@@ -75,9 +80,35 @@ const backendRoutes = [
   }
 ]
 
+// 前台路由配置
+const frontendRoutes = [
+  {
+    path: '/',
+    component: FrontendLayout,
+    children: [
+      {
+        path: '',
+        component: home,
+      },
+      {
+        path: 'consultation',
+        component: consultation,
+      },
+      {
+        path: 'emotion-diary',
+        component: emotionDiary,
+      },
+      {
+        path: 'knowledge',
+        component: frontendKnowledge,
+      },
+    ]
+  },
+]
+
 const router = createRouter({
   history: createWebHistory(),
-  routes: backendRoutes
+  routes: [...backendRoutes, ...frontendRoutes]
 })
 
 //路由前置守卫
