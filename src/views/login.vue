@@ -98,9 +98,12 @@ const submitLogin = async (formRef) => {
           // 管理员用户，跳转到后台管理系统
           router.push("/back/dashboard");
         } else {
-          // TODO 普通用户，跳转到用户中心
+          // 普通用户，跳转到用户中心
+          router.push("/");
         }
       });
+    } else {
+      ElMessage.error("请填写用户名和密码");
     }
   });
 };

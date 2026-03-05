@@ -8,3 +8,27 @@ export const register = (data) => {
     data,
   });
 }
+
+// 创建新会话
+export const startSession = (data) => {
+  return service({
+    url: '/psychological-chat/session/start',
+    method: 'post',
+    data,
+  });
+}
+
+// 获取历史会话列表
+export function getSessionList(params) {
+  return service.get('/psychological-chat/sessions', { params })
+}
+
+// 删除会话
+export function deleteSession(sessionId) {
+  return service.delete(`/psychological-chat/sessions/${sessionId}`)
+}
+
+// 获取会话详情
+export function getSessionDetail(sessionId) {
+  return service.get(`/psychological-chat/sessions/${sessionId}/messages`)
+}

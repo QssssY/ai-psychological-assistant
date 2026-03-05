@@ -9,13 +9,9 @@ export const login = (data) => {
   });
 }
 
-// 注册用户请求
-export const register = (data) => {
-  return service({
-    url: '/user/add',
-    method: 'post',
-    data,
-  });
+//退出登录
+export function logout() {
+  return service.post('/user/logout')
 }
 
 // 获取情感知识分类树
@@ -127,7 +123,3 @@ export function getDataAnalyticsOverview() {
   })
 }
 
-//退出登录
-export function logout() {
-  return service.post('/user/logout')
-}

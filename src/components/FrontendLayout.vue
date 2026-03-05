@@ -14,7 +14,7 @@
           >情绪日记</router-link
         >
         <router-link to="/knowledge" class="nav-link">知识库</router-link>
-        <el-button v-if="isLogin" class="logout-btn" size="small"
+        <el-button v-if="isLogin" class="logout-btn" @click="handleLogout"
           >退出登录</el-button
         >
         <template v-else>
@@ -38,10 +38,26 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { logout } from "@/api/admin";
+import { ElMessage } from "element-plus";
+import router from "@/router";
+
 //logo图片
 const iconUrl = new URL("@/assets/images/机器人.png", import.meta.url).href;
 //是否登录
 const isLogin = ref(false);
+
+// 处理退出登录
+const handleLogout = () => {
+  // 清除localStorage中的token和userInfo
+  logout().then(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userInfo");
+    // 跳转到登录页
+    router.push("/auth/login");
+    ElMessage.success("已退出登录");
+  });
+};
 
 onMounted(() => {
   // 检查是否登录

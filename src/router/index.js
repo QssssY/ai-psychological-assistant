@@ -126,7 +126,12 @@ router.beforeEach((to, from, next) => {
         next("/back/dashboard");
       }
     } else if (userInfo.userType === 1) {
-
+      //用户端账号只能访问前台路由
+      if (to.path.startsWith("/back") || to.path.startsWith("/auth")) {
+        next("/");
+      } else {
+        next();
+      }
     }
   } else {
     //用户未登录则判断是否访问后台路由
