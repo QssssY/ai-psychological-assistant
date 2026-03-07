@@ -83,7 +83,7 @@
       </div>
       <div class="chat-messages">
         <!-- 欢迎消息 -->
-        <div v-if="message.length === 0" class="message-item ai-message">
+        <div v-if="messages.length === 0" class="message-item ai-message">
           <div class="message-avatar">
             <el-image
               :src="iconUrl"
@@ -102,7 +102,7 @@
         </div>
         <!-- 消息列表 -->
         <div
-          v-for="msg in message"
+          v-for="msg in messages"
           :key="msg.id"
           class="message-item"
           :class="msg.senderType === 1 ? 'user-message' : 'ai-message'"
@@ -173,8 +173,17 @@
             class="message-input"
             clearable
           />
+          <div class="input-footer">
+            <span>按Enter发送，Shift+Enter换行</span>
+            <span>{{ inputMessage.length }}/ 500</span>
+          </div>
         </div>
-        <el-button type="primary" class="send-btn" @click="sendMessage">
+        <el-button
+          :disabled="!inputMessage || inputMessage.length > 500"
+          type="primary"
+          class="send-btn"
+          @click="sendMessage"
+        >
           <el-icon><Promotion /></el-icon>
         </el-button>
       </div>
@@ -192,6 +201,7 @@ import {
 } from "@/api/frontend";
 import { ElMessage, ElMessageBox } from "element-plus";
 import MarkdownRenderer from "@/components/MarkdownRenderer.vue";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 // 引入图标
 const iconUrl = new URL("@/assets/images/robot-fill.png", import.meta.url).href;
@@ -215,7 +225,7 @@ const formatDuration = (minutes) => {
 // 定义AI助手是否正在输入中
 const isAiTyping = ref(false);
 //定义对话消息数据
-const message = ref([]);
+const messages = ref([]);
 // 用户输入消息
 const inputMessage = ref("");
 // 历史会话列表
@@ -257,8 +267,16 @@ const handleDeleteSession = async (sessionId) => {
 const handleSessionClick = async (session) => {
   // 点击会话时，获取会话详情
   const res = await getSessionDetail(session.id);
-  message.value = res || [];
+  messages.value = res || [];
+  //将当前会话设置为点击的会话
+  const sessionData = {
+    sessionId: `session_${session.id}`,
+    status: "ACTIVE",
+    sessionTitle: session.sessionTitle,
+  };
+  currentSession.value = sessionData;
 };
+
 // 获取历史会话列表
 const loadSessionList = async () => {
   const res = await getSessionList({
@@ -278,13 +296,22 @@ const sendMessage = () => {
     ElMessage.warning("AI助手正在输入中，请稍后再试");
     return;
   }
-  const message = inputMessage.value.trim();
+  const userMessage = inputMessage.value.trim();
   //清空输入框
   inputMessage.value = "";
 
   //如果没有会话或者是临时会话，创建一个新会话
   if (currentSession.value && currentSession.value.status === "TEMP") {
-    startNewSession(message);
+    startNewSession(userMessage);
+  } else {
+    //继续现有会话
+    messages.value.push({
+      id: Date.now(),
+      senderType: 1,
+      content: userMessage,
+      createAt: new Date().toISOString(),
+    });
+    startAIStreamingResponse(currentSession.value.sessionId, userMessage);
   }
 };
 
@@ -305,10 +332,10 @@ const createNewFrontendSession = () => {
 };
 
 // 启动新会话
-const startNewSession = async (message) => {
+const startNewSession = async (userMessage) => {
   //构建会话参数
   const sessionParams = {
-    initialMessage: message,
+    initialMessage: userMessage,
   };
   //如果是临时会话，设置会话标题为 塔塔AI助手 -当前时间
   if (currentSession.value.sessionTitle === "新会话") {
@@ -337,6 +364,102 @@ const startNewSession = async (message) => {
   }
   //更新历史会话列表
   loadSessionList();
+  //创建一个新的用户消息对象
+  const userMessageObj = {
+    id: Date.now(),
+    senderType: 1,
+    content: userMessage,
+    createAt: new Date().toISOString(),
+  };
+  //将用户消息添加到消息列表中
+  messages.value.push(userMessageObj);
+  //开始流式传输
+  startAIStreamingResponse(currentSession.value.sessionId, userMessage);
+};
+
+// 开始流式传输AI响应
+const startAIStreamingResponse = (sessionId, userMessage) => {
+  //防止重复发送
+  if (isAiTyping.value) {
+    ElMessage.warning("AI助手正在输入中，请稍后再试");
+    return;
+  }
+  //设置AI助手正在输入中
+  isAiTyping.value = true;
+
+  const aiMessage = {
+    id: `ai_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+    senderType: 2,
+    content: "",
+    createAt: new Date().toISOString(),
+  };
+  //将AI助手的消息添加到消息列表中
+  messages.value.push(aiMessage);
+  //开启流式传输
+  const ctrl = new AbortController(); //用来中止fetch请求
+  fetchEventSource("/api/psychological-chat/stream", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Token: localStorage.getItem("token"),
+      Accept: "text/event-stream",
+    },
+    body: JSON.stringify({
+      sessionId,
+      userMessage,
+    }),
+    signal: ctrl.signal,
+    onopen: (response) => {
+      if (response.headers.get("Content-Type") !== "text/event-stream") {
+        ElMessage.error("服务器返回非流式传输，请稍后再试");
+      }
+    },
+    onmessage: (event) => {
+      const raw = event.data.trim();
+      if (!raw) return;
+      //事件名称
+      const eventName = event.event;
+      //当前会话的AI消息
+      const currentAiMessage = messages.value[messages.value.length - 1];
+      //如果是done事件，说明流式传输结束
+      if (eventName === "done") {
+        //设置AI助手不在输入中，流式传输结束
+        isAiTyping.value = false;
+        //关闭流式传输
+        ctrl.abort();
+        return;
+      }
+      //message事件，说明是AI助手的回复
+      const payload = JSON.parse(raw);
+      const ok = String(payload.code) === "200";
+      if (ok && payload.data && payload.data.content) {
+        //更新AI助手的回复内容
+        currentAiMessage.content += payload.data.content;
+      } else if (!ok) {
+        //如果不是200状态码，说明AI回复失败
+        handleError(payload.message || "AI回复失败");
+      }
+    },
+    onerror: (err) => {
+      //如果发生错误，说明AI回复失败
+      handleError(err || "AI回复失败");
+      throw err;
+    },
+    onclose: () => {
+      //TODO 开始情绪分析
+    },
+  });
+};
+
+// 处理错误
+const handleError = (err) => {
+  //当前会话的AI消息
+  const currentAiMessage = messages.value[messages.value.length - 1];
+  if (currentAiMessage) {
+    currentAiMessage.content = "AI回复失败，请重试";
+  }
+  isAiTyping.value = false;
+  ElMessage.error("AI回复失败，请重试");
 };
 
 onMounted(() => {
