@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="title">
-      <div class="back-home">
+      <div class="back-home" @click="toHome">
         <el-icon>
           <Back />
         </el-icon>
@@ -74,6 +74,10 @@ const rules = reactive({
   ],
   password: [{ required: true, message: "请输入密码", trigger: "blur" }],
 });
+// 跳转到首页
+const toHome = () => {
+  router.push("/");
+};
 // 登录处理函数
 const submitLogin = async (formRef) => {
   if (!formRef) {
@@ -115,6 +119,7 @@ const submitLogin = async (formRef) => {
   .title {
     .back-home {
       margin-bottom: 60px;
+      cursor: pointer;
     }
     .title-text {
       text-align: center;

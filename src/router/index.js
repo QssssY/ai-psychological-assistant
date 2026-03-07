@@ -12,6 +12,7 @@ import home from '@/views/home.vue'
 import consultation from '@/views/consultation.vue'
 import emotionDiary from '@/views/emotionDiary.vue'
 import frontendKnowledge from '@/views/frontendKnowledge.vue'
+import articleDetail from '@/views/articleDetail.vue'
 
 
 
@@ -102,6 +103,10 @@ const frontendRoutes = [
         path: 'knowledge',
         component: frontendKnowledge,
       },
+      {
+        path: 'knowledge/article/:id',
+        component: articleDetail,
+      }
     ]
   },
 ]

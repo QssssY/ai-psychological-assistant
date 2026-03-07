@@ -11,8 +11,10 @@
           不刻意找话，你说的我都认真听、慢慢懂，那些细碎情绪有人接住，不催不扰，平淡日子里，我陪你好好唠嗑
         </p>
         <div class="hero-actions">
-          <el-button size="large"> 开始倾述，获得陪伴 </el-button>
-          <el-button size="large" class="record-btn">
+          <el-button size="large" @click="toChat">
+            开始倾述，获得陪伴
+          </el-button>
+          <el-button size="large" class="record-btn" @click="toRecord">
             记录心情，释放情感
           </el-button>
         </div>
@@ -25,7 +27,33 @@
 </template>
 
 <script setup>
+import router from "@/router";
 const logoUrl = new URL("@/assets/images/robot-fill.png", import.meta.url).href;
+import { ElMessage } from "element-plus";
+
+// 检查用户是否登录
+const isLogin = () => {
+  return !!localStorage.getItem("token");
+};
+
+// 跳转到聊天页面
+const toChat = () => {
+  if (!isLogin()) {
+    ElMessage.warning("请先登录账号");
+    router.push("auth/login");
+    return;
+  }
+  router.push("/consultation");
+};
+// 跳转到记录页面
+const toRecord = () => {
+  if (!isLogin()) {
+    ElMessage.warning("请先登录账号");
+    router.push("auth/login");
+    return;
+  }
+  router.push("/emotion-diary");
+};
 </script>
 
 <style scoped lang="scss">

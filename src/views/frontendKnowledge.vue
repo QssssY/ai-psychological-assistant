@@ -19,6 +19,7 @@
             v-for="item in recommendList"
             :key="item.id"
             class="recommend-item"
+            @click="handleClickGoDetail(item.id)"
           >
             <h4>{{ item.title }}</h4>
             <p class="read-count">
@@ -32,7 +33,12 @@
       </div>
       <!-- 右侧内容 -->
       <div class="article-list">
-        <div v-for="item in articleList" :key="item.id" class="article-item">
+        <div
+          v-for="item in articleList"
+          :key="item.id"
+          class="article-item"
+          @click="handleClickGoDetail(item.id)"
+        >
           <el-image
             :src="getImageUrl(item.coverImage)"
             alt="文章封面"
@@ -89,6 +95,7 @@ import { ref, onMounted, reactive } from "vue";
 import { getKnowledgeArticlePage } from "@/api/frontend";
 import { fileBaseURL } from "@/config";
 import { dayjs } from "element-plus";
+import router from "@/router";
 
 const iconUrl = new URL("@/assets/images/book.png", import.meta.url).href;
 // 推荐文章列表
@@ -122,6 +129,14 @@ const getImageUrl = (imagePath) => {
     return "https://file.itndedu.com/psychology_ai.png";
   }
   return `${fileBaseURL}${imagePath}`;
+};
+
+// 点击文章跳转详情页
+const handleClickGoDetail = (id) => {
+  // 跳转到文章详情页
+  router.push({
+    path: `/knowledge/article/${id}`,
+  });
 };
 
 // 获取文章列表
@@ -230,6 +245,7 @@ onMounted(() => {
         padding: 15px;
         margin-bottom: 20px;
         display: flex;
+        cursor: pointer;
         .info {
           margin-left: 20px;
           .title {
