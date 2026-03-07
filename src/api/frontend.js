@@ -32,3 +32,8 @@ export function deleteSession(sessionId) {
 export function getSessionDetail(sessionId) {
   return service.get(`/psychological-chat/sessions/${sessionId}/messages`)
 }
+
+// 获取会话情绪分析
+export function getSessionEmotionAnalysis(sessionId) {
+  return service.get(`/psychological-chat/session/${sessionId}/emotion`)
+}

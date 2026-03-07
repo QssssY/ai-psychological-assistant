@@ -186,8 +186,8 @@
 </template>
 
 <script setup>
-import PageHead from "@/components/pageHead.vue";
-import TableSearch from "@/components/tableSearch.vue";
+import PageHead from "@/components/PageHead.vue";
+import TableSearch from "@/components/TableSearch.vue";
 import { reactive, ref, onMounted } from "vue";
 import { getEmotionalLogList, deleteEmotionalLog } from "@/api/admin";
 import { ElMessageBox, ElMessage } from "element-plus";

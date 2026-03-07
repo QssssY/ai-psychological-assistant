@@ -17,6 +17,77 @@
           在线服务中
         </div>
       </div>
+      <!-- 情绪花园 -->
+      <div class="emotion-garden">
+        <div class="garden-header">
+          <div class="garden-title">情绪花园</div>
+        </div>
+        <div class="emotion-info">
+          <div class="emotion-name">{{ currentEmotion.primaryEmotion }}</div>
+          <div class="emotion-score">{{ currentEmotion.emotionScore }}</div>
+        </div>
+        <div class="warm-tips">
+          <div class="emotion-status-text">
+            <span class="status-label">今天感觉</span>
+            <span class="status-emotion">{{
+              currentEmotion.isNegative ? "需要关注" : "很不错"
+            }}</span>
+          </div>
+          <div class="emotion-intensity">
+            <div class="intensity-dots">
+              <span
+                v-for="dot in 3"
+                :key="dot"
+                class="dot"
+                :class="{
+                  active: dot <= getIntensityClass(currentEmotion.emotionScore),
+                }"
+              ></span>
+            </div>
+            <span class="intensity-text">
+              {{ getRiskText(currentEmotion.riskLevel) }}
+            </span>
+          </div>
+          <!-- 温暖建议卡片 -->
+          <div class="warm-suggestion" v-if="currentEmotion.suggestion">
+            <div class="suggestion-icon">💝</div>
+            <div class="suggestion-content">
+              <div class="suggestion-title">给你的小建议</div>
+              <div class="suggestion-text">{{ currentEmotion.suggestion }}</div>
+            </div>
+          </div>
+          <!-- 治愈行动清单 -->
+          <div
+            class="healing-actions"
+            v-if="currentEmotion.improvementSuggestions.length > 0"
+          >
+            <div class="actions-title">治愈小行动</div>
+            <div class="actions-list">
+              <div
+                v-for="action in currentEmotion.improvementSuggestions"
+                :key="action"
+                class="action-item"
+              >
+                <div class="action-icon">✨</div>
+                <div class="action-text">{{ action }}</div>
+              </div>
+            </div>
+          </div>
+          <!-- 风险提示 -->
+          <div
+            class="risk-notice"
+            v-if="currentEmotion.isNegative && currentEmotion.riskLevel > 1"
+          >
+            <div class="notice-icon">🤗</div>
+            <div class="notice-content">
+              <div class="notice-title">风险提示</div>
+              <div class="notice-text">
+                {{ currentEmotion.riskDescription }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- 历史会话列表 -->
       <div class="session-history">
         <h4 class="section-title">会话历史</h4>
@@ -198,6 +269,7 @@ import {
   getSessionList,
   deleteSession,
   getSessionDetail,
+  getSessionEmotionAnalysis,
 } from "@/api/frontend";
 import { ElMessage, ElMessageBox } from "element-plus";
 import MarkdownRenderer from "@/components/MarkdownRenderer.vue";
@@ -208,20 +280,6 @@ const iconUrl = new URL("@/assets/images/robot-fill.png", import.meta.url).href;
 const likeIconUrl = new URL("@/assets/images/like.png", import.meta.url).href;
 const userIconUrl = new URL("@/assets/images/users.png", import.meta.url).href;
 
-// 将分钟数转换为时分格式
-const formatDuration = (minutes) => {
-  if (!minutes || minutes <= 0) return "0分钟";
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (hours === 0) {
-    return `${mins}分钟`;
-  } else if (mins === 0) {
-    return `${hours}小时`;
-  } else {
-    return `${hours}小时${mins}分钟前`;
-  }
-};
-
 // 定义AI助手是否正在输入中
 const isAiTyping = ref(false);
 //定义对话消息数据
@@ -230,11 +288,82 @@ const messages = ref([]);
 const inputMessage = ref("");
 // 历史会话列表
 const sessionList = ref([]);
+//情绪花园
+const currentEmotion = ref({
+  primaryEmotion: "中性",
+  emotionScore: 55,
+  isNegative: false,
+  riskLevel: 0,
+  suggestion: "保持良好状态",
+  improvementSuggestions: [],
+  riskDescription: "正常",
+});
+//根据情绪分数获取情绪强度等级
+const getIntensityClass = (score) => {
+  if (score >= 61) return 3;
+  if (score >= 31) return 2;
+  return 1;
+};
+//根据风险等级获取风险描述
+const getRiskText = (riskLevel) => {
+  if (riskLevel === 0) return "正常";
+  if (riskLevel === 1) return "关注";
+  if (riskLevel === 2) return "预警";
+  if (riskLevel === 3) return "危机 ";
+  return "正常";
+};
+
 // 处理键盘事件
 const handleKeyDown = (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
+  }
+};
+
+// 将分钟数转换为年月日时分格式
+const formatDuration = (minutes) => {
+  if (!minutes || minutes <= 0) return "0分钟";
+
+  // 定义时间单位的分钟数
+  const minutesInYear = 365 * 24 * 60; // 一年的分钟数
+  const minutesInMonth = 30 * 24 * 60; // 一个月的分钟数
+  const minutesInDay = 24 * 60; // 一天的分钟数
+  const minutesInHour = 60; // 一小时的分钟数
+
+  // 计算各时间单位
+  const years = Math.floor(minutes / minutesInYear);
+  minutes %= minutesInYear;
+
+  const months = Math.floor(minutes / minutesInMonth);
+  minutes %= minutesInMonth;
+
+  const days = Math.floor(minutes / minutesInDay);
+  minutes %= minutesInDay;
+
+  const hours = Math.floor(minutes / minutesInHour);
+  const mins = minutes % minutesInHour;
+
+  // 构建结果字符串
+  let result = "";
+  if (years > 0) result += `${years}年`;
+  if (months > 0) result += `${months}月`;
+  if (days > 0) result += `${days}天`;
+  if (hours > 0) result += `${hours}小时`;
+  if (mins > 0) result += `${mins}分钟`;
+
+  return result + "前";
+};
+
+// 获取当前会话的情绪分析
+const getCurrentSessionEmotion = async (sessionId) => {
+  //确保sessionId格式正确
+  const id = sessionId.toString().startsWith("session_")
+    ? sessionId
+    : `session_${sessionId}`;
+  const res = await getSessionEmotionAnalysis(id);
+  if (res) {
+    currentEmotion.value = res;
   }
 };
 
@@ -267,6 +396,7 @@ const handleDeleteSession = async (sessionId) => {
 const handleSessionClick = async (session) => {
   // 点击会话时，获取会话详情
   const res = await getSessionDetail(session.id);
+
   messages.value = res || [];
   //将当前会话设置为点击的会话
   const sessionData = {
@@ -274,7 +404,10 @@ const handleSessionClick = async (session) => {
     status: "ACTIVE",
     sessionTitle: session.sessionTitle,
   };
+  //将当前会话设置为点击的会话
   currentSession.value = sessionData;
+  //获取当前会话的情绪分析
+  getCurrentSessionEmotion(sessionData.sessionId);
 };
 
 // 获取历史会话列表
@@ -329,6 +462,8 @@ const createNewFrontendSession = () => {
   };
   //将新会话设置为当前会话
   currentSession.value = newSession;
+  //清空消息列表
+  messages.value = [];
 };
 
 // 启动新会话
@@ -427,6 +562,8 @@ const startAIStreamingResponse = (sessionId, userMessage) => {
         isAiTyping.value = false;
         //关闭流式传输
         ctrl.abort();
+        //开始情绪分析
+        getCurrentSessionEmotion(currentSession.value.sessionId);
         return;
       }
       //message事件，说明是AI助手的回复
@@ -446,7 +583,8 @@ const startAIStreamingResponse = (sessionId, userMessage) => {
       throw err;
     },
     onclose: () => {
-      //TODO 开始情绪分析
+      //开始情绪分析
+      getCurrentSessionEmotion(currentSession.value.sessionId);
     },
   });
 };
