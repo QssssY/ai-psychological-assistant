@@ -37,3 +37,12 @@ export function getSessionDetail(sessionId) {
 export function getSessionEmotionAnalysis(sessionId) {
   return service.get(`/psychological-chat/session/${sessionId}/emotion`)
 }
+
+// 提交情绪日志
+export function submitEmotionDiary(data) {
+  return service({
+    url: '/emotion-diary',
+    method: 'post',
+    data,
+  });
+}
