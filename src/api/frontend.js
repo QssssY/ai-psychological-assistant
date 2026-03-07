@@ -46,3 +46,7 @@ export function submitEmotionDiary(data) {
     data,
   });
 }
+
+export function getKnowledgeArticlePage(params) {
+  return service.get('/knowledge/article/page', { params })
+}

@@ -77,9 +77,9 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from "vue";
 import PageHead from "@/components/PageHead.vue";
 import TableSearch from "@/components/TableSearch.vue";
+import { onMounted, reactive, ref } from "vue";
 import { ElMessageBox, ElMessage } from "element-plus";
 import {
   getCategoryTree,
