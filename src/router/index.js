@@ -1,20 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import BackendLayout from '@/components/BackendLayout.vue'
-import Dashboard from '@/views/dashboard.vue'
-import knowledge from '@/views/knowledge.vue'
-import consultations from '@/views/consultations.vue'
-import emotional from '@/views/emotional.vue'
 import AuthLayout from '@/components/AuthLayout.vue'
+import FrontendLayout from '@/components/FrontendLayout.vue'
+
+// 登录/注册页保持同步加载（首屏必需）
 import login from '@/views/login.vue'
 import register from '@/views/register.vue'
-import FrontendLayout from '@/components/FrontendLayout.vue'
-import home from '@/views/home.vue'
-import consultation from '@/views/consultation.vue'
-import emotionDiary from '@/views/emotionDiary.vue'
-import frontendKnowledge from '@/views/frontendKnowledge.vue'
-import articleDetail from '@/views/articleDetail.vue'
 
+// ============================================================
+// 路由懒加载配置
+// 使用动态 import() 实现代码分割，减少首屏加载体积
+// 登录/注册页除外（首屏必需，快速展示）
+// ============================================================
 
+// 后台页面组件 - 懒加载
+const Dashboard = () => import('@/views/dashboard.vue')
+const knowledge = () => import('@/views/knowledge.vue')
+const consultations = () => import('@/views/consultations.vue')
+const emotional = () => import('@/views/emotional.vue')
+
+// 前台页面组件 - 懒加载
+const home = () => import('@/views/home.vue')
+const consultation = () => import('@/views/consultation.vue')
+const emotionDiary = () => import('@/views/emotionDiary.vue')
+const frontendKnowledge = () => import('@/views/frontendKnowledge.vue')
+const articleDetail = () => import('@/views/articleDetail.vue')
 
 // 后台路由配置
 const backendRoutes = [

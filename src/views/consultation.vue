@@ -1,5 +1,5 @@
 <template>
-  <div class="consultation-container">
+  <div class="consultation-container" :class="{ 'sad-theme': isSadTheme }">
     <div class="sidebar">
       <!-- AI助手信息 -->
       <div class="ai-assistant-info">
@@ -59,7 +59,7 @@
           <!-- 治愈行动清单 -->
           <div
             class="healing-actions"
-            v-if="currentEmotion.improvementSuggestions.length > 0"
+            v-if="!!currentEmotion.improvementSuggestions"
           >
             <div class="actions-title">治愈小行动</div>
             <div class="actions-list">
@@ -263,7 +263,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import {
   startSession,
   getSessionList,
@@ -313,6 +313,16 @@ const getRiskText = (riskLevel) => {
   return "正常";
 };
 
+// 是否启用“伤心主题”（当情绪为负面时）
+const isSadTheme = ref(false);
+// 监听 currentEmotion.isNegative 的变化
+watch(
+  () => currentEmotion.value.isNegative,
+  (newVal) => {
+    isSadTheme.value = newVal;
+  },
+  { immediate: true } // 立即执行一次，确保初始状态正确
+);
 // 处理键盘事件
 const handleKeyDown = (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -464,6 +474,18 @@ const createNewFrontendSession = () => {
   currentSession.value = newSession;
   //清空消息列表
   messages.value = [];
+  console.log(currentEmotion.value.improvementSuggestions);
+
+  //重置情绪花园
+  currentEmotion.value = {
+    primaryEmotion: "中性",
+    emotionScore: 55,
+    isNegative: false,
+    riskLevel: 0,
+    suggestion: "保持良好状态",
+    improvementSuggestions: [],
+    riskDescription: "正常",
+  };
 };
 
 // 启动新会话
@@ -1176,6 +1198,298 @@ onMounted(() => {
         transition: all 0.3s ease;
       }
     }
+  }
+}
+/* ========================================
+   伤心主题样式（当 isNegative = true 时应用）
+   色系：浅蓝灰 #E0E8F0、淡紫 #E6E6FA、浅藕荷 #F5F0F7
+   强调色：淡蓝 #99B3DD
+   背景色：极浅灰 #F8FAFC
+======================================== */
+.consultation-container.sad-theme {
+  /* 页面整体背景 */
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+
+  /* 侧边栏 - AI助手信息 */
+  .sidebar {
+    .ai-assistant-info {
+      background: linear-gradient(
+        135deg,
+        rgba(224, 232, 240, 0.9) 0%,
+        rgba(230, 230, 250, 0.95) 100%
+      );
+      border: 1px solid rgba(153, 179, 221, 0.15);
+      box-shadow: 0 8px 32px rgba(153, 179, 221, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+      backdrop-filter: blur(10px);
+
+      .breathing-circle {
+        background: linear-gradient(135deg, #99b3dd 0%, #8ba3d0 100%);
+        box-shadow: 0 6px 24px rgba(153, 179, 221, 0.3);
+      }
+
+      .assistant-name {
+        background: linear-gradient(135deg, #99b3dd, #8ba3d0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .online-status {
+        color: #667eea;
+        .status-dot {
+          background: #667eea;
+          box-shadow: 0 0 8px rgba(102, 126, 234, 0.4);
+        }
+      }
+    }
+
+    /* 情绪花园 - 伤心主题配色 */
+    .emotion-garden {
+      background: linear-gradient(
+        135deg,
+        #e6e6fa 0%,
+        #f5f0f7 50%,
+        #e8e8f5 100%
+      );
+      box-shadow: 0 8px 32px rgba(153, 179, 221, 0.15);
+      border: 1px solid rgba(153, 179, 221, 0.2);
+
+      .garden-header {
+        .garden-title {
+          color: #667eea;
+        }
+      }
+
+      .emotion-info {
+        background: linear-gradient(
+          135deg,
+          #99b3dd 0%,
+          #a8b8e0 50%,
+          #b8c8e8 100%
+        );
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 4px 16px rgba(153, 179, 221, 0.25);
+      }
+
+      .warm-tips {
+        .emotion-status-text {
+          .status-label {
+            color: #667eea;
+          }
+          .status-emotion {
+            color: #667eea;
+          }
+        }
+        .emotion-intensity {
+          .intensity-dots {
+            .dot {
+              background: #e0e8f0;
+              &.active {
+                background: linear-gradient(135deg, #99b3dd, #a8b8e0);
+                box-shadow: 0 2px 8px rgba(153, 179, 221, 0.4);
+              }
+            }
+          }
+          .intensity-text {
+            color: #667eea;
+          }
+        }
+        .warm-suggestion {
+          background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.95),
+            rgba(245, 240, 247, 0.9)
+          );
+          border: 1px solid rgba(153, 179, 221, 0.3);
+          box-shadow: 0 6px 20px rgba(153, 179, 221, 0.12);
+
+          .suggestion-content {
+            .suggestion-title {
+              color: #667eea;
+            }
+            .suggestion-text {
+              color: #5a6a8a;
+            }
+          }
+        }
+        .healing-actions {
+          .actions-title {
+            color: #667eea;
+          }
+          .actions-list {
+            .action-item {
+              background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.9),
+                rgba(245, 240, 247, 0.85)
+              );
+              border: 1px solid rgba(153, 179, 221, 0.2);
+              box-shadow: 0 4px 12px rgba(153, 179, 221, 0.08);
+
+              .action-text {
+                color: #5a6a8a;
+              }
+            }
+          }
+        }
+        .risk-notice {
+          background: linear-gradient(135deg, #e6e6fa, #d8d8f0);
+          border: 1px solid rgba(153, 179, 221, 0.4);
+          box-shadow: 0 6px 20px rgba(153, 179, 221, 0.2);
+
+          .notice-content {
+            .notice-title {
+              color: #667eea;
+            }
+            .notice-text {
+              color: #5a6a8a;
+            }
+          }
+        }
+      }
+    }
+
+    /* 历史会话列表 */
+    .session-history {
+      background: white;
+      border: 1px solid rgba(153, 179, 221, 0.15);
+
+      .section-title {
+        color: #667eea;
+      }
+
+      .session-list {
+        .session-item {
+          &:hover {
+            background: #f0f4fa;
+            border-color: #d0e0f5;
+          }
+          &.active {
+            background: #e0e8f5;
+            border-color: #99b3dd;
+          }
+        }
+      }
+    }
+  }
+
+  /* 聊天主区域 */
+  .chat-main {
+    background: linear-gradient(
+      135deg,
+      rgba(248, 250, 252, 0.95) 0%,
+      rgba(240, 244, 250, 0.98) 100%
+    );
+    border: 1px solid rgba(153, 179, 221, 0.15);
+    box-shadow: 0 12px 40px rgba(153, 179, 221, 0.1),
+      0 4px 16px rgba(0, 0, 0, 0.04);
+
+    /* 聊天头部 - 蓝色系 */
+    .chat-header {
+      background: linear-gradient(135deg, #99b3dd 0%, #a8b8e0 100%);
+      color: white;
+
+      .chat-avatar {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    /* 消息列表区域 */
+    .chat-messages {
+      background: linear-gradient(
+        135deg,
+        rgba(248, 250, 252, 0.02) 0%,
+        rgba(240, 244, 250, 0.05) 100%
+      );
+      scrollbar-color: rgba(153, 179, 221, 0.3) transparent;
+
+      .message-item {
+        &.ai-message {
+          .message-avatar {
+            background: linear-gradient(135deg, #99b3dd, #8ba3d0);
+            box-shadow: 0 4px 12px rgba(153, 179, 221, 0.3);
+          }
+        }
+        &.user-message {
+          .message-avatar {
+            background: linear-gradient(135deg, #7c8db0, #6b7a99);
+            box-shadow: 0 4px 12px rgba(107, 122, 153, 0.3);
+          }
+        }
+        .message-content {
+          .message-bubble {
+            background: linear-gradient(
+              135deg,
+              rgba(255, 255, 255, 0.95) 0%,
+              rgba(245, 240, 247, 0.98) 100%
+            );
+            border: 1px solid rgba(153, 179, 221, 0.15);
+            box-shadow: 0 4px 16px rgba(153, 179, 221, 0.08);
+          }
+        }
+      }
+    }
+
+    /* 消息输入区域 */
+    .chat-input {
+      border-top: 1px solid rgba(153, 179, 221, 0.15);
+      background: linear-gradient(
+        135deg,
+        rgba(248, 250, 252, 0.6) 0%,
+        rgba(240, 244, 250, 0.8) 100%
+      );
+      backdrop-filter: blur(10px);
+
+      .input-footer {
+        color: #7c8db0;
+      }
+
+      /* 发送按钮 - 蓝色系 */
+      .send-btn {
+        background: linear-gradient(
+          135deg,
+          #99b3dd 0%,
+          #8ba3d0 100%
+        ) !important;
+        border: none !important;
+        box-shadow: 0 6px 20px rgba(153, 179, 221, 0.3) !important;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: linear-gradient(
+            135deg,
+            #8ba3d0 0%,
+            #7c93c0 100%
+          ) !important;
+          box-shadow: 0 8px 24px rgba(153, 179, 221, 0.4) !important;
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+    }
+  }
+}
+
+/* Element Plus 按钮主题色覆盖 - 伤心主题 */
+.consultation-container.sad-theme {
+  .el-textarea {
+    --el-input-focus-border-color: #99b3dd;
+  }
+
+  .el-input {
+    --el-input-focus-border-color: #99b3dd;
+  }
+
+  .el-button--primary {
+    --el-button-bg-color: #99b3dd;
+    --el-button-border-color: #99b3dd;
+    --el-button-hover-bg-color: #8ba3d0;
+    --el-button-hover-border-color: #8ba3d0;
+    --el-button-active-bg-color: #7c93c0;
+    --el-button-active-border-color: #7c93c0;
   }
 }
 </style>
