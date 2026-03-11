@@ -33,46 +33,71 @@
       </div>
       <!-- 右侧内容 -->
       <div class="article-list">
-        <div
-          v-for="item in articleList"
-          :key="item.id"
-          class="article-item"
-          @click="handleClickGoDetail(item.id)"
+        <!-- 骨架屏加载状态 -->
+        <ArticleSkeleton v-if="loading" :count="6" />
+        <!-- 虚拟滚动列表 -->
+        <DynamicScroller
+          v-else
+          :items="articleList"
+          :min-item-size="200"
+          key-field="id"
+          class="article-scroller"
         >
-          <el-image
-            :src="getImageUrl(item.coverImage)"
-            alt="文章封面"
-            style="width: 240px; height: 150px"
-          />
-          <div class="info">
-            <h3 class="title">
-              {{ item.title }}
-              <el-tag type="primary" plain>{{ item.categoryName }}</el-tag>
-            </h3>
-            <div style="margin-top: 10px">
-              <div class="flex-box">
-                <el-icon>
-                  <Avatar />
-                </el-icon>
-                <span>{{ item.authorName }}</span>
+          <template v-slot="{ item, index, active }">
+            <DynamicScrollerItem
+              :item="item"
+              :active="active"
+              :data-index="index"
+            >
+              <div class="article-item" @click="handleClickGoDetail(item.id)">
+                <div class="image-wrapper">
+                  <img
+                    v-lazy="getImageUrl(item.coverImage)"
+                    :src="getImageUrl(item.coverImage)"
+                    alt="文章封面"
+                    class="article-cover"
+                    :data-id="item.id"
+                  />
+                  <div class="image-placeholder" v-if="!imageLoaded[item.id]">
+                    <el-icon><Picture /></el-icon>
+                  </div>
+                </div>
+                <div class="info">
+                  <h3 class="title">
+                    {{ item.title }}
+                    <el-tag type="primary" plain>{{
+                      item.categoryName
+                    }}</el-tag>
+                  </h3>
+                  <div style="margin-top: 10px">
+                    <div class="flex-box">
+                      <el-icon>
+                        <Avatar />
+                      </el-icon>
+                      <span>{{ item.authorName }}</span>
+                    </div>
+                    <div class="flex-box">
+                      <el-icon>
+                        <Clock />
+                      </el-icon>
+                      <span>{{
+                        dayjs(item.publishedAt).format("YYYY-MM-DD")
+                      }}</span>
+                    </div>
+                  </div>
+                  <div style="margin-top: 25px">
+                    <div class="flex-box">
+                      <el-icon>
+                        <Platform />
+                      </el-icon>
+                      <span>阅读量：{{ item.readCount }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="flex-box">
-                <el-icon>
-                  <Clock />
-                </el-icon>
-                <span>{{ dayjs(item.publishedAt).format("YYYY-MM-DD") }}</span>
-              </div>
-            </div>
-            <div style="margin-top: 25px">
-              <div class="flex-box">
-                <el-icon>
-                  <Platform />
-                </el-icon>
-                <span>阅读量：{{ item.readCount }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+            </DynamicScrollerItem>
+          </template>
+        </DynamicScroller>
       </div>
     </div>
     <!-- 分页器 -->
@@ -96,18 +121,50 @@ import { getKnowledgeArticlePage } from "@/api/frontend";
 import { fileBaseURL } from "@/config";
 import { dayjs } from "element-plus";
 import router from "@/router";
+import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
+import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
+import ArticleSkeleton from "@/components/skeleton/ArticleSkeleton.vue";
+import { Picture, Avatar, Clock, Platform } from "@element-plus/icons-vue";
 
 const iconUrl = new URL("@/assets/images/book.png", import.meta.url).href;
 // 推荐文章列表
 const recommendList = ref([]);
 // 文章列表
 const articleList = ref([]);
+// 加载状态
+const loading = ref(true);
+// 图片加载状态
+const imageLoaded = reactive({});
 // 分页信息
 const pagination = reactive({
   currentPage: 1,
   size: 10,
   total: 0,
 });
+
+// 图片懒加载指令
+const vLazy = {
+  mounted(el, binding) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            el.src = binding.value;
+            el.onload = () => {
+              const id = el.dataset.id;
+              if (id) imageLoaded[id] = true;
+            };
+            observer.unobserve(el);
+          }
+        });
+      },
+      {
+        rootMargin: "50px",
+      }
+    );
+    observer.observe(el);
+  },
+};
 // 分页改变处理函数
 const handlePageChange = (page) => {
   pagination.currentPage = page;
@@ -141,15 +198,26 @@ const handleClickGoDetail = (id) => {
 
 // 获取文章列表
 const getArticleList = async () => {
-  const params = {
-    sortField: "publishedAt",
-    sortDirection: "desc",
-    ...pagination,
-  };
-  const res = await getKnowledgeArticlePage(params);
-  if (res) {
-    articleList.value = res.records;
-    pagination.total = res.total;
+  loading.value = true;
+  try {
+    const params = {
+      sortField: "publishedAt",
+      sortDirection: "desc",
+      ...pagination,
+    };
+    const res = await getKnowledgeArticlePage(params);
+    if (res) {
+      articleList.value = res.records;
+      pagination.total = res.total;
+      // 初始化图片加载状态
+      articleList.value.forEach((item) => {
+        imageLoaded[item.id] = false;
+      });
+    }
+  } finally {
+    setTimeout(() => {
+      loading.value = false;
+    }, 300);
   }
 };
 
@@ -238,6 +306,11 @@ onMounted(() => {
     }
     .article-list {
       flex: 1;
+
+      .article-scroller {
+        height: calc(100vh - 280px);
+      }
+
       .article-item {
         background: white;
         border-radius: 12px;
@@ -246,6 +319,42 @@ onMounted(() => {
         margin-bottom: 20px;
         display: flex;
         cursor: pointer;
+
+        .image-wrapper {
+          position: relative;
+          width: 240px;
+          height: 150px;
+          flex-shrink: 0;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .article-cover {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+
+        .article-cover[src] {
+          opacity: 1;
+        }
+
+        .image-placeholder {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f5f5f5;
+          color: #999;
+          font-size: 32px;
+        }
+
         .info {
           margin-left: 20px;
           .title {

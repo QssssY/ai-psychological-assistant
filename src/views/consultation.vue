@@ -49,11 +49,13 @@
             </span>
           </div>
           <!-- 温暖建议卡片 -->
-          <div class="warm-suggestion" v-if="currentEmotion.suggestion">
+          <div class="warm-suggestion" v-if="currentEmotion">
             <div class="suggestion-icon">💝</div>
             <div class="suggestion-content">
               <div class="suggestion-title">给你的小建议</div>
-              <div class="suggestion-text">{{ currentEmotion.suggestion }}</div>
+              <div class="suggestion-text">
+                {{ currentEmotion.suggestion || "保持良好状态，天天开心" }}
+              </div>
             </div>
           </div>
           <!-- 治愈行动清单 -->
@@ -91,30 +93,52 @@
       <!-- 历史会话列表 -->
       <div class="session-history">
         <h4 class="section-title">会话历史</h4>
-        <div class="session-list">
+        <!-- 骨架屏加载状态 -->
+        <SessionSkeleton v-if="sessionLoading" :count="6" />
+        <!-- 虚拟滚动列表 -->
+        <!-- 调试信息 -->
+        <div
+          v-if="sessionList.length === 0 && !sessionLoading"
+          style="padding: 20px; text-align: center; color: #999"
+        >
+          暂无会话记录
+        </div>
+        <!-- 虚拟滚动列表 -->
+        <RecycleScroller
+          v-else-if="sessionList.length > 0"
+          class="session-scroller"
+          :items="sessionList"
+          :item-size="120"
+          key-field="id"
+          :buffer="5"
+          v-slot="{ item }"
+        >
           <div
             class="session-item"
-            v-for="session in sessionList"
-            :key="session.id"
-            @click="handleSessionClick(session)"
+            :class="{
+              active: currentSession?.sessionId === `session_${item.id}`,
+            }"
+            @click="handleSessionClick(item)"
           >
             <div class="session-info">
               <div class="session-title">
-                <span>{{ session.sessionTitle }}</span>
+                <span class="title-text">{{
+                  item.sessionTitle || "无标题"
+                }}</span>
                 <div class="session-meta">
-                  <span class="session-time">{{ session.startedAt }}</span>
+                  <span class="session-time">{{ item.startedAt || "-" }}</span>
                 </div>
                 <div class="session-preview">
-                  {{ session.lastMessageContent }}
+                  {{ item.lastMessageContent || "无消息内容" }}
                 </div>
                 <div class="session-stats">
-                  <span>
+                  <span class="stat-item">
                     <el-icon><ChatRound /></el-icon>
-                    {{ session.messageCount || 0 }}
+                    {{ item.messageCount || 0 }}
                   </span>
-                  <span>
+                  <span class="stat-item">
                     <el-icon><Clock /></el-icon>
-                    {{ formatDuration(session.durationMinutes || 0) }}
+                    {{ formatDuration(item.durationMinutes || 0) }}
                   </span>
                 </div>
               </div>
@@ -122,14 +146,15 @@
                 <el-button
                   type="danger"
                   text
-                  @click="handleDeleteSession(session.id)"
+                  size="small"
+                  @click.stop="handleDeleteSession(item.id)"
                 >
                   <el-icon><DeleteFilled /></el-icon>
                 </el-button>
               </div>
             </div>
           </div>
-        </div>
+        </RecycleScroller>
       </div>
     </div>
     <!-- 聊天消息区域 -->
@@ -274,6 +299,9 @@ import {
 import { ElMessage, ElMessageBox } from "element-plus";
 import MarkdownRenderer from "@/components/MarkdownRenderer.vue";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
+import { RecycleScroller } from "vue-virtual-scroller";
+import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
+import SessionSkeleton from "@/components/skeleton/SessionSkeleton.vue";
 
 // 引入图标
 const iconUrl = new URL("@/assets/images/robot-fill.png", import.meta.url).href;
@@ -288,6 +316,8 @@ const messages = ref([]);
 const inputMessage = ref("");
 // 历史会话列表
 const sessionList = ref([]);
+// 会话列表加载状态
+const sessionLoading = ref(true);
 //情绪花园
 const currentEmotion = ref({
   primaryEmotion: "中性",
@@ -422,12 +452,20 @@ const handleSessionClick = async (session) => {
 
 // 获取历史会话列表
 const loadSessionList = async () => {
-  const res = await getSessionList({
-    pageNum: 1,
-    pageSize: 10,
-  });
-  //将后端数据转换为前端数据格式
-  sessionList.value = res.records || [];
+  sessionLoading.value = true;
+  try {
+    const res = await getSessionList({
+      pageNum: 1,
+      pageSize: 100,
+    });
+    //将后端数据转换为前端数据格式
+    sessionList.value = res.records || [];
+  } finally {
+    // 延迟关闭骨架屏，避免闪烁
+    setTimeout(() => {
+      sessionLoading.value = false;
+    }, 300);
+  }
 };
 
 // 用户发送消息
@@ -637,8 +675,15 @@ onMounted(() => {
   display: flex;
   gap: 20px;
   padding: 20px;
+  height: calc(100vh - 40px);
+  max-height: calc(100vh - 40px);
+  overflow: hidden;
   .sidebar {
     width: 320px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(251, 146, 60, 0.3) transparent;
     .ai-assistant-info {
       margin-bottom: 20px;
       background: linear-gradient(
@@ -713,82 +758,115 @@ onMounted(() => {
         justify-content: space-between;
       }
       .session-list {
+        max-height: 400px;
         overflow-y: auto;
-        max-height: 200px;
         scrollbar-width: thin;
         scrollbar-color: rgba(64, 150, 255, 0.3) transparent;
+      }
+
+      .session-scroller {
+        height: 400px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(64, 150, 255, 0.3) transparent;
+
+        :deep(.vue-recycle-scroller__item-wrapper) {
+          transform: translateZ(0);
+          will-change: transform;
+        }
+
+        :deep(.vue-recycle-scroller__item-view) {
+          height: 120px !important;
+          overflow: hidden;
+        }
+
         .session-item {
-          position: relative;
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-          padding: 12px;
-          margin-bottom: 8px;
-          border-radius: 12px;
+          height: 120px;
+          padding: 12px 16px;
+          border-bottom: 1px solid #e5e7eb;
           cursor: pointer;
           transition: all 0.3s ease;
-          border: 2px solid transparent;
+          box-sizing: border-box;
+          background: white;
+
           &:hover {
             background: #f8f9ff;
-            border-color: #e6f0ff;
           }
+
           &.active {
             background: #e6f0ff;
-            border-color: #4096ff;
+            border-left: 3px solid #4096ff;
           }
+
           .session-info {
-            flex: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            height: 100%;
+
             .session-title {
-              font-weight: 500;
-              font-size: 14px;
-              color: #333;
-              margin-bottom: 4px;
-              white-space: nowrap;
+              flex: 1;
+              min-width: 0;
               overflow: hidden;
-              text-overflow: ellipsis;
+
+              .title-text {
+                display: block;
+                font-weight: 500;
+                font-size: 14px;
+                color: #333;
+                margin-bottom: 4px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.4;
+              }
+
               .session-meta {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 6px;
+                margin-bottom: 4px;
+
                 .session-time {
                   font-size: 12px;
                   color: #999;
                 }
               }
+
               .session-preview {
-                width: 200px;
                 font-size: 12px;
                 color: #666;
-                margin-bottom: 6px;
-                white-space: nowrap;
+                margin-bottom: 4px;
+                line-height: 1.4;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                max-height: 2.8em;
               }
+
               .session-stats {
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                span {
+                white-space: nowrap;
+
+                .stat-item {
                   font-size: 12px;
                   color: #999;
                   display: flex;
                   align-items: center;
                   gap: 4px;
+                  white-space: nowrap;
+                  flex-shrink: 0;
                 }
               }
             }
+
             .session-actions {
-              position: absolute;
-              top: 10px;
-              right: 12px;
+              flex-shrink: 0;
+              margin-left: 8px;
+              padding-top: 4px;
             }
           }
-        }
-        .no-sessions-text {
-          text-align: center;
-          font-size: 14px;
-          color: #999;
         }
       }
     }
@@ -1027,6 +1105,7 @@ onMounted(() => {
     flex-direction: column;
     overflow: hidden;
     flex: 1;
+    height: 100%;
     .chat-header {
       background: linear-gradient(135deg, #fb923c 0%, #f59e0b 100%);
       color: white;
@@ -1077,7 +1156,6 @@ onMounted(() => {
         rgba(255, 252, 248, 0.05) 100%
       );
       min-height: 0;
-      max-height: calc(100vh - 200px);
       scrollbar-width: thin;
       scrollbar-color: rgba(251, 146, 60, 0.3) transparent;
       .message-item {
@@ -1162,7 +1240,7 @@ onMounted(() => {
     }
     .chat-input {
       border-top: 1px solid rgba(251, 146, 60, 0.1);
-      padding: 20px 24px;
+      padding: 16px 24px;
       display: flex;
       gap: 12px;
       align-items: flex-end;
@@ -1175,6 +1253,7 @@ onMounted(() => {
       flex-shrink: 0;
       .input-container {
         flex: 1;
+        min-width: 0;
       }
       .input-footer {
         display: flex;
@@ -1187,6 +1266,8 @@ onMounted(() => {
       .send-btn {
         height: 60px;
         width: 60px;
+        min-height: 60px;
+        min-width: 60px;
         border-radius: 16px;
         background: linear-gradient(
           135deg,
@@ -1196,6 +1277,7 @@ onMounted(() => {
         border: none !important;
         box-shadow: 0 6px 20px rgba(251, 146, 60, 0.25);
         transition: all 0.3s ease;
+        flex-shrink: 0;
       }
     }
   }
@@ -1469,6 +1551,16 @@ onMounted(() => {
           transform: scale(0.95);
         }
       }
+    }
+  }
+}
+
+.chat-input {
+  .el-textarea {
+    width: 100%;
+    .el-textarea__inner {
+      resize: none;
+      min-height: 80px !important;
     }
   }
 }

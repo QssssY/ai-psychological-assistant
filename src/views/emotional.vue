@@ -2,48 +2,60 @@
   <div>
     <PageHead title="情绪日志" />
     <TableSearch :formItem="formItem" @search="handleSearch" />
-    <el-table
-      :data="tableData"
-      style="width: 100%; margin-top: 25px"
-      v-loading="tableLoading"
-    >
-      <el-table-column label="用户ID" prop="id" width="80" />
-      <el-table-column label="会话ID" width="80">
-        <template #default="scope">
-          <el-avatar>{{ scope.row.nickname }}</el-avatar>
-        </template>
-      </el-table-column>
-      <el-table-column label="记录日期" prop="diaryDate" width="120" />
-      <el-table-column label="情绪评分">
-        <template #default="scope">
-          <el-rate :model-value="scope.row.moodScore" :max="10" disabled />
-        </template>
-      </el-table-column>
-      <el-table-column label="生活指标" width="130">
-        <template #default="scope">
-          <div>
-            <p>睡眠：{{ scope.row.sleepQuality }} / 5</p>
-            <p>压力：{{ scope.row.stressLevel }} / 5</p>
+    <!-- 表格骨架屏 -->
+    <TableSkeleton v-if="tableLoading" :columns="8" :rows="10" />
+    <!-- 自定义虚拟表格 -->
+    <div v-else class="virtual-table-container">
+      <!-- 表头 -->
+      <div class="table-header">
+        <div class="header-cell" style="width: 80px">用户ID</div>
+        <div class="header-cell" style="width: 80px">会话ID</div>
+        <div class="header-cell" style="width: 120px">记录日期</div>
+        <div class="header-cell" style="width: 200px">情绪评分</div>
+        <div class="header-cell" style="width: 130px">生活指标</div>
+        <div class="header-cell" style="width: 150px">情绪触发因素</div>
+        <div class="header-cell" style="width: 250px">日记内容</div>
+        <div class="header-cell" style="width: 250px">操作</div>
+      </div>
+      <!-- 虚拟滚动表体 -->
+      <RecycleScroller
+        class="table-body"
+        :items="tableData"
+        :item-size="60"
+        key-field="id"
+      >
+        <template v-slot="{ item }">
+          <div class="table-row">
+            <div class="cell" style="width: 80px">{{ item.id }}</div>
+            <div class="cell" style="width: 80px">
+              <el-avatar :size="32">{{ item.nickname?.[0] }}</el-avatar>
+            </div>
+            <div class="cell" style="width: 120px">{{ item.diaryDate }}</div>
+            <div class="cell" style="width: 200px">
+              <el-rate :model-value="item.moodScore" :max="10" disabled />
+            </div>
+            <div class="cell" style="width: 130px">
+              <div>睡眠：{{ item.sleepQuality }}/5</div>
+              <div>压力：{{ item.stressLevel }}/5</div>
+            </div>
+            <div class="cell text-ellipsis" style="width: 150px">
+              {{ item.emotionTriggers }}
+            </div>
+            <div class="cell text-ellipsis" style="width: 250px">
+              {{ item.diaryContent }}
+            </div>
+            <div class="cell" style="width: 250px">
+              <el-button type="primary" text @click="viewDetail(item)">
+                详细
+              </el-button>
+              <el-button type="danger" text @click="handleDelete(item)">
+                删除
+              </el-button>
+            </div>
           </div>
         </template>
-      </el-table-column>
-      <el-table-column
-        label="情绪触发因素"
-        prop="emotionTriggers"
-        width="150"
-      />
-      <el-table-column label="日记内容" prop="diaryContent" width="250" />
-      <el-table-column label="操作" width="250" fixed="right">
-        <template #default="scope">
-          <el-button type="primary" text @click="viewDetail(scope.row)"
-            >详细</el-button
-          >
-          <el-button type="danger" text @click="handleDelete(scope.row)"
-            >删除</el-button
-          >
-        </template>
-      </el-table-column>
-    </el-table>
+      </RecycleScroller>
+    </div>
     <el-pagination
       style="margin-top: 20px"
       layout="prev,pager,next"
@@ -191,6 +203,9 @@ import TableSearch from "@/components/TableSearch.vue";
 import { reactive, ref, onMounted } from "vue";
 import { getEmotionalLogList, deleteEmotionalLog } from "@/api/admin";
 import { ElMessageBox, ElMessage } from "element-plus";
+import { RecycleScroller } from "vue-virtual-scroller";
+import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
+import TableSkeleton from "@/components/skeleton/TableSkeleton.vue";
 
 // 列表加载状态
 const tableLoading = ref(false);
@@ -358,6 +373,56 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+.virtual-table-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 25px;
+}
+
+.table-header {
+  display: flex;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.header-cell {
+  padding: 12px 16px;
+  border-right: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.table-body {
+  height: 600px;
+}
+
+.table-row {
+  display: flex;
+  align-items: center;
+  height: 60px;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: #f5f7fa;
+  }
+}
+
+.cell {
+  padding: 12px 16px;
+  border-right: 1px solid #e5e7eb;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.text-ellipsis {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
 .detail-content {
   .detail-section {
     margin-bottom: 24px;
