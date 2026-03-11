@@ -33,6 +33,46 @@
       </div>
       <!-- 右侧内容 -->
       <div class="article-list">
+        <!-- 智能搜索框 -->
+        <div class="smart-search-wrapper">
+          <el-input
+            :model-value="searchInput"
+            @update:model-value="handleSearchInput"
+            placeholder="搜索文章标题或内容，支持拼音（如：jiaolv）..."
+            clearable
+            @focus="showSuggestions = true"
+            @blur="handleBlur"
+            class="smart-search-input"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+          <!-- 搜索建议下拉框 -->
+          <div
+            v-show="showSuggestions && filteredArticles.length > 0"
+            class="search-suggestions"
+          >
+            <div
+              v-for="item in filteredArticles.slice(0, 6)"
+              :key="item.id"
+              class="suggestion-item"
+              @mousedown="handleSuggestionClick(item)"
+            >
+              <div class="suggestion-title">
+                {{ highlightText(item.title) }}
+              </div>
+              <div class="suggestion-meta">
+                <span>{{ item.categoryName }}</span>
+                <span>阅读量 {{ item.readCount }}</span>
+              </div>
+            </div>
+          </div>
+          <!-- 搜索统计 -->
+          <div v-if="searchInput && !showSuggestions" class="search-stats">
+            找到 {{ filteredArticles.length }} 篇相关文章
+          </div>
+        </div>
         <!-- 骨架屏加载状态 -->
         <ArticleSkeleton v-if="loading" :count="6" />
         <!-- 虚拟滚动列表 -->
@@ -124,7 +164,15 @@ import router from "@/router";
 import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import ArticleSkeleton from "@/components/skeleton/ArticleSkeleton.vue";
-import { Picture, Avatar, Clock, Platform } from "@element-plus/icons-vue";
+import { useSmartSearch } from "@/composables/useSmartSearch";
+import {
+  Picture,
+  Avatar,
+  Clock,
+  Platform,
+  Search,
+  Histogram,
+} from "@element-plus/icons-vue";
 
 const iconUrl = new URL("@/assets/images/book.png", import.meta.url).href;
 // 推荐文章列表
@@ -142,6 +190,33 @@ const pagination = reactive({
   total: 0,
 });
 
+// ========== 使用智能搜索组合式函数 ==========
+const {
+  searchQuery: searchInput,
+  suggestions: filteredArticles,
+  isSearching: showSuggestions,
+  debouncedSearch: handleSearchInput,
+  highlightText,
+} = useSmartSearch(articleList, {
+  searchKeys: ["title", "content", "categoryName"],
+  debounceMs: 200,
+  maxSuggestions: 8,
+});
+
+// 处理失去焦点
+const handleBlur = () => {
+  setTimeout(() => {
+    showSuggestions.value = false;
+  }, 200);
+};
+
+// 处理建议点击
+const handleSuggestionClick = (item) => {
+  handleClickGoDetail(item.id);
+  showSuggestions.value = false;
+};
+
+// 高亮搜索文本
 // 图片懒加载指令
 const vLazy = {
   mounted(el, binding) {
@@ -307,8 +382,83 @@ onMounted(() => {
     .article-list {
       flex: 1;
 
+      // 智能搜索样式
+      .smart-search-wrapper {
+        position: relative;
+        margin-bottom: 20px;
+
+        .smart-search-input {
+          :deep(.el-input__wrapper) {
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            padding: 8px 16px;
+          }
+          :deep(.el-input__inner) {
+            font-size: 14px;
+            height: 44px;
+          }
+        }
+
+        .search-suggestions {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+          margin-top: 8px;
+          z-index: 100;
+          max-height: 400px;
+          overflow-y: auto;
+
+          .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            transition: all 0.2s;
+
+            &:hover {
+              background: #f9fafb;
+            }
+
+            &:last-child {
+              border-bottom: none;
+            }
+
+            .suggestion-title {
+              font-size: 14px;
+              font-weight: 500;
+              color: #1f2937;
+              margin-bottom: 4px;
+
+              :deep(mark) {
+                background: #fef3c7;
+                color: #92400e;
+                padding: 0 2px;
+                border-radius: 2px;
+              }
+            }
+
+            .suggestion-meta {
+              font-size: 12px;
+              color: #6b7280;
+              display: flex;
+              gap: 12px;
+            }
+          }
+        }
+
+        .search-stats {
+          margin-top: 8px;
+          font-size: 13px;
+          color: #6b7280;
+          padding-left: 8px;
+        }
+      }
+
       .article-scroller {
-        height: calc(100vh - 280px);
+        height: calc(100vh - 380px);
       }
 
       .article-item {

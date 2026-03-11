@@ -61,7 +61,7 @@
           <!-- 治愈行动清单 -->
           <div
             class="healing-actions"
-            v-if="!!currentEmotion.improvementSuggestions"
+            v-if="currentEmotion.improvementSuggestions?.length > 0"
           >
             <div class="actions-title">治愈小行动</div>
             <div class="actions-list">
@@ -325,7 +325,7 @@ const currentEmotion = ref({
   isNegative: false,
   riskLevel: 0,
   suggestion: "保持良好状态",
-  improvementSuggestions: [],
+  improvementSuggestions: ["动起来，鲜花会为你开"],
   riskDescription: "正常",
 });
 //根据情绪分数获取情绪强度等级
@@ -512,7 +512,6 @@ const createNewFrontendSession = () => {
   currentSession.value = newSession;
   //清空消息列表
   messages.value = [];
-  console.log(currentEmotion.value.improvementSuggestions);
 
   //重置情绪花园
   currentEmotion.value = {
@@ -1567,6 +1566,15 @@ onMounted(() => {
 
 /* Element Plus 按钮主题色覆盖 - 伤心主题 */
 .consultation-container.sad-theme {
+  /* 侧边栏滚动条 - 蓝色系 */
+  .sidebar {
+    scrollbar-color: rgba(153, 179, 221, 0.5) transparent;
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(153, 179, 221, 0.5);
+    }
+  }
+
   .el-textarea {
     --el-input-focus-border-color: #99b3dd;
   }
