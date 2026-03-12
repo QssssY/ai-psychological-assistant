@@ -8,6 +8,8 @@
           style="width: 60px; height: 60px"
         />
         <h1>心理健康知识库</h1>
+        <!-- 主题切换按钮 -->
+        <ThemeToggle class="theme-toggle" />
       </div>
     </div>
     <div class="content">
@@ -165,6 +167,8 @@ import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import ArticleSkeleton from "@/components/skeleton/ArticleSkeleton.vue";
 import { useSmartSearch } from "@/composables/useSmartSearch";
+import ThemeToggle from "@/components/ThemeToggle.vue";
+import { useTheme } from "@/composables/useTheme";
 import {
   Picture,
   Avatar,
@@ -173,6 +177,9 @@ import {
   Search,
   Histogram,
 } from "@element-plus/icons-vue";
+
+// 初始化主题
+const { appliedTheme } = useTheme();
 
 const iconUrl = new URL("@/assets/images/book.png", import.meta.url).href;
 // 推荐文章列表
@@ -320,7 +327,10 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .knowledge-container {
-  background: linear-gradient(135deg, #fafbfc 0%, #f7f9fc 50%, #f2f6fa 100%);
+  background: var(--bg-secondary);
+  min-height: 100vh;
+  transition: background-color 0.3s ease;
+
   .flex-box {
     display: flex;
     align-items: center;
@@ -328,14 +338,25 @@ onMounted(() => {
       margin-left: 10px;
     }
   }
+
   .header-section {
     background: linear-gradient(135deg, #f59e0b 0%, #8b5cf6 100%);
     color: white;
     padding: 48px;
+    position: relative;
+
     .header-content {
       display: flex;
       align-items: center;
       gap: 12px;
+      position: relative;
+
+      .theme-toggle {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+      }
     }
   }
   .content {
@@ -346,32 +367,49 @@ onMounted(() => {
     padding: 20px;
     .recommend-section {
       width: 280px;
-      background: white;
+      background: var(--bg-card);
       border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow-md);
       padding: 15px;
       height: 400px;
+      transition: all 0.3s ease;
+
       .section-title {
-        font-size: 12;
+        font-size: 14px;
         font-weight: 600;
-        color: #374151;
+        color: var(--text-primary);
         margin-bottom: 10px;
         display: flex;
         align-items: center;
         gap: 5px;
       }
+
       .recommend-list {
         display: flex;
         flex-direction: column;
         gap: 1rem;
+
         .recommend-item {
-          border-left: 4px solid #f59e0b;
+          border-left: 4px solid var(--primary-color);
           padding-left: 10px;
           cursor: pointer;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: var(--bg-hover);
+            border-radius: 0 8px 8px 0;
+          }
+
+          h4 {
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.4;
+          }
+
           .read-count {
             margin-top: 15px;
             font-size: 12px;
-            color: #6b7280;
+            color: var(--text-secondary);
             display: flex;
             align-items: center;
             gap: 10px;

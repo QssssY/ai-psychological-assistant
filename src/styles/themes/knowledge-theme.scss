@@ -1,0 +1,177 @@
+/**
+ * 知识库主题配色方案
+ * 支持浅色/深色模式切换
+ */
+
+// ==================== 浅色主题（默认） ====================
+:root {
+  // 主色调
+  --primary-color: #fb923c;
+  --primary-light: #fdba74;
+  --primary-dark: #f97316;
+  
+  // 背景色
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --bg-hover: #f3f4f6;
+  --bg-card: #ffffff;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  
+  // 文字色
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --text-inverse: #ffffff;
+  
+  // 边框色
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
+  --border-dark: #d1d5db;
+  
+  // 阴影
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  // 功能色
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
+  
+  // 骨架屏
+  --skeleton-bg: #f3f4f6;
+  --skeleton-highlight: #e5e7eb;
+}
+
+// ==================== 深色主题 ====================
+[data-theme="dark"] {
+  // 主色调（保持品牌色）
+  --primary-color: #fb923c;
+  --primary-light: #fdba74;
+  --primary-dark: #f97316;
+  
+  // 背景色（深色系）
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --bg-hover: #374151;
+  --bg-card: #1f2937;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  
+  // 文字色（高对比度）
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --text-inverse: #1f2937;
+  
+  // 边框色
+  --border-color: #374151;
+  --border-light: #4b5563;
+  --border-dark: #6b7280;
+  
+  // 阴影（更深）
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  
+  // 功能色（调整亮度）
+  --success-color: #34d399;
+  --warning-color: #fbbf24;
+  --error-color: #f87171;
+  --info-color: #60a5fa;
+  
+  // 骨架屏
+  --skeleton-bg: #374151;
+  --skeleton-highlight: #4b5563;
+}
+
+// ==================== 过渡动画 ====================
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 0.3s ease,
+              color 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease !important;
+}
+
+// ==================== Element Plus 主题覆盖 ====================
+[data-theme="dark"] {
+  // 按钮
+  .el-button {
+    &--default {
+      background: var(--bg-secondary);
+      border-color: var(--border-color);
+      color: var(--text-primary);
+      
+      &:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--border-dark);
+      }
+    }
+    
+    &--primary {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+  }
+  
+  // 输入框
+  .el-input {
+    &__wrapper {
+      background: var(--bg-secondary);
+      box-shadow: 0 0 0 1px var(--border-color) inset;
+    }
+    
+    &__inner {
+      color: var(--text-primary);
+      
+      &::placeholder {
+        color: var(--text-tertiary);
+      }
+    }
+  }
+  
+  // 卡片
+  .el-card {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+  
+  // 下拉菜单
+  .el-dropdown-menu {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    
+    &__item {
+      color: var(--text-primary);
+      
+      &:hover {
+        background: var(--bg-hover);
+      }
+    }
+  }
+  
+  // 滚动条
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-dark);
+    border-radius: 4px;
+    
+    &:hover {
+      background: var(--text-tertiary);
+    }
+  }
+}

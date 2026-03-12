@@ -1,147 +1,157 @@
 <template>
   <div class="dashboard-container">
-    <el-row :gutter="20">
-      <el-col :span="6">
-        <el-card>
-          <div v-if="dashboardData.systemOverview" class="card-content">
-            <div class="avatar users">
-              <el-image :src="usersIcon" class="imageSize" />
+    <!-- 骨架屏加载状态 -->
+    <DashboardSkeleton v-if="loading" />
+
+    <!-- 实际内容 -->
+    <template v-else>
+      <el-row :gutter="20">
+        <el-col :span="6">
+          <el-card>
+            <div v-if="dashboardData.systemOverview" class="card-content">
+              <div class="avatar users">
+                <el-image :src="usersIcon" class="imageSize" />
+              </div>
+              <div class="info">
+                <p class="title">总用户数</p>
+                <p class="number">
+                  {{ dashboardData?.systemOverview?.totalUsers }}
+                </p>
+                <p class="subtitle-title">
+                  活跃用户: {{ dashboardData?.systemOverview?.activeUsers }}
+                </p>
+              </div>
             </div>
-            <div class="info">
-              <p class="title">总用户数</p>
-              <p class="number">
-                {{ dashboardData?.systemOverview?.totalUsers }}
-              </p>
-              <p class="subtitle-title">
-                活跃用户: {{ dashboardData?.systemOverview?.activeUsers }}
-              </p>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card>
+            <div v-if="dashboardData.systemOverview" class="card-content">
+              <div class="avatar like">
+                <el-image :src="likeIcon" class="imageSize" />
+              </div>
+              <div class="info">
+                <p class="title">情绪日志</p>
+                <p class="number">
+                  {{ dashboardData?.systemOverview?.totalDiaries }}
+                </p>
+                <p class="subtitle-title">
+                  今日新增:
+                  {{ dashboardData?.systemOverview?.todayNewDiaries }}
+                </p>
+              </div>
             </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card>
-          <div v-if="dashboardData.systemOverview" class="card-content">
-            <div class="avatar like">
-              <el-image :src="likeIcon" class="imageSize" />
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card>
+            <div v-if="dashboardData.systemOverview" class="card-content">
+              <div class="avatar comments">
+                <el-image :src="commentsIcon" class="imageSize" />
+              </div>
+              <div class="info">
+                <p class="title">咨询会话</p>
+                <p class="number">
+                  {{ dashboardData?.systemOverview?.totalSessions }}
+                </p>
+                <p class="subtitle-title">
+                  今日新增:
+                  {{ dashboardData?.systemOverview?.todayNewSessions }}
+                </p>
+              </div>
             </div>
-            <div class="info">
-              <p class="title">情绪日志</p>
-              <p class="number">
-                {{ dashboardData?.systemOverview?.totalDiaries }}
-              </p>
-              <p class="subtitle-title">
-                今日新增:
-                {{ dashboardData?.systemOverview?.todayNewDiaries }}
-              </p>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card>
+            <div v-if="dashboardData.systemOverview" class="card-content">
+              <div class="avatar smile">
+                <el-image :src="smileIcon" class="imageSize" />
+              </div>
+              <div class="info">
+                <p class="title">平均情绪</p>
+                <p class="number">
+                  {{ dashboardData?.systemOverview?.avgMoodScore }}/10
+                </p>
+                <p class="subtitle-title">情绪健康指数</p>
+              </div>
             </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card>
-          <div v-if="dashboardData.systemOverview" class="card-content">
-            <div class="avatar comments">
-              <el-image :src="commentsIcon" class="imageSize" />
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-row :gutter="20" style="margin-top: 20px">
+        <el-col :span="12">
+          <el-card style="width: 100%">
+            <template #header>
+              <div class="card-header">情绪趋势分析</div>
+            </template>
+            <div class="chart-content">
+              <div
+                ref="emotionChartRef"
+                style="width: 100%; height: 300px"
+              ></div>
             </div>
-            <div class="info">
-              <p class="title">咨询会话</p>
-              <p class="number">
-                {{ dashboardData?.systemOverview?.totalSessions }}
-              </p>
-              <p class="subtitle-title">
-                今日新增:
-                {{ dashboardData?.systemOverview?.todayNewSessions }}
-              </p>
+          </el-card>
+        </el-col>
+        <el-col :span="12">
+          <el-card style="width: 100%">
+            <template #header>
+              <div class="card-header">咨询会话统计</div>
+            </template>
+            <div class="chart-content">
+              <div
+                v-if="dashboardData.consultationStats"
+                class="consultation-stats"
+              >
+                <div class="stat-item">
+                  <div class="stat-label">总会话数</div>
+                  <div class="stat-value">
+                    {{ dashboardData?.consultationStats?.totalSessions }}
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">平均时长</div>
+                  <div class="stat-value">
+                    {{ dashboardData?.consultationStats?.avgDurationMinutes }}
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">活跃用户</div>
+                  <div class="stat-value">
+                    {{ dashboardData?.systemOverview?.activeUsers }}
+                  </div>
+                </div>
+              </div>
+              <div
+                ref="consultationChartRef"
+                style="width: 100%; height: 260px"
+              ></div>
             </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card>
-          <div v-if="dashboardData.systemOverview" class="card-content">
-            <div class="avatar smile">
-              <el-image :src="smileIcon" class="imageSize" />
-            </div>
-            <div class="info">
-              <p class="title">平均情绪</p>
-              <p class="number">
-                {{ dashboardData?.systemOverview?.avgMoodScore }}/10
-              </p>
-              <p class="subtitle-title">情绪健康指数</p>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-    <el-row :gutter="20" style="margin-top: 20px">
-      <el-col :span="12">
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-row style="margin-top: 20px">
         <el-card style="width: 100%">
           <template #header>
-            <div class="card-header">情绪趋势分析</div>
-          </template>
-          <div class="chart-content">
-            <div ref="emotionChartRef" style="width: 100%; height: 300px"></div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card style="width: 100%">
-          <template #header>
-            <div class="card-header">咨询会话统计</div>
+            <div class="card-header">用户活跃度趋势</div>
           </template>
           <div class="chart-content">
             <div
-              v-if="dashboardData.consultationStats"
-              class="consultation-stats"
-            >
-              <div class="stat-item">
-                <div class="stat-label">总会话数</div>
-                <div class="stat-value">
-                  {{ dashboardData?.consultationStats?.totalSessions }}
-                </div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">平均时长</div>
-                <div class="stat-value">
-                  {{ dashboardData?.consultationStats?.avgDurationMinutes }}
-                </div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-label">活跃用户</div>
-                <div class="stat-value">
-                  {{ dashboardData?.systemOverview?.activeUsers }}
-                </div>
-              </div>
-            </div>
-            <div
-              ref="consultationChartRef"
-              style="width: 100%; height: 260px"
+              ref="userActivityChartRef"
+              style="width: 100%; height: 300px"
             ></div>
           </div>
         </el-card>
-      </el-col>
-    </el-row>
-    <el-row style="margin-top: 20px">
-      <el-card style="width: 100%">
-        <template #header>
-          <div class="card-header">用户活跃度趋势</div>
-        </template>
-        <div class="chart-content">
-          <div
-            ref="userActivityChartRef"
-            style="width: 100%; height: 300px"
-          ></div>
-        </div>
-      </el-card>
-    </el-row>
+      </el-row>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { getDataAnalyticsOverview } from "@/api/admin";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import * as echarts from "echarts";
+import DashboardSkeleton from "@/components/skeleton/DashboardSkeleton.vue";
 
 //统计图片引入
 const usersIcon = new URL("@/assets/images/users.png", import.meta.url).href;
@@ -150,16 +160,27 @@ const commentsIcon = new URL("@/assets/images/comments.png", import.meta.url)
   .href;
 const smileIcon = new URL("@/assets/images/smile.png", import.meta.url).href;
 
+// 加载状态
+const loading = ref(true);
 // 存储数据分析概览数据
 const dashboardData = ref({});
+
 //获取数据分析概览数据
 const getDashboardData = async () => {
+  loading.value = true;
   try {
     const res = await getDataAnalyticsOverview();
     dashboardData.value = res;
-    initCharts();
+    // 先关闭加载状态，让DOM渲染完成
+    loading.value = false;
+    // 在下一个tick初始化图表，确保DOM已更新
+    await nextTick();
+    setTimeout(() => {
+      initCharts();
+    }, 100);
   } catch (error) {
     console.log(error);
+    loading.value = false;
   }
 };
 
