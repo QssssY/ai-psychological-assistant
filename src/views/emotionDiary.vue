@@ -2,12 +2,20 @@
   <div class="emotionDiary-container">
     <div class="header-section">
       <div class="header-content">
-        <el-image
-          :src="iconUrl"
-          alt="like icon"
-          style="width: 60px; height: 60px"
-        />
-        <h1>情绪日记</h1>
+        <div class="left-area">
+          <el-image
+            :src="iconUrl"
+            alt="like icon"
+            style="width: 60px; height: 60px"
+          />
+          <h1>情绪日记</h1>
+        </div>
+        <div class="emotional-words">
+          <div class="quote-mark left">"</div>
+          <p class="quote-text">{{ dailyQuote }}</p>
+          <div class="quote-mark right">"</div>
+          <div class="quote-decoration"></div>
+        </div>
       </div>
     </div>
     <div class="content">
@@ -121,8 +129,11 @@ import { ref, reactive } from "vue";
 import { dayjs } from "element-plus";
 import { submitEmotionDiary } from "@/api/frontend";
 import { ElMessage } from "element-plus";
+import { useDailyQuote } from "@/composables/useDailyQuote";
 
 const iconUrl = new URL("@/assets/images/like.png", import.meta.url).href;
+// 情感语句
+const dailyQuote = useDailyQuote();
 // 情绪状态
 const emotionStatus = [
   "绝望崩溃",
@@ -237,8 +248,81 @@ const submitDiary = async () => {
     padding: 48px;
     .header-content {
       display: flex;
+      justify-content: space-between;
       align-items: center;
       gap: 12px;
+      .left-area {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .emotional-words {
+        position: relative;
+        padding: 24px 40px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        width: fit-content;
+        max-width: 90%;
+        text-align: center;
+        animation: fadeInQuote 0.8s ease-out;
+
+        .quote-mark {
+          position: absolute;
+          font-size: 60px;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.4);
+          font-family: Georgia, serif;
+          line-height: 1;
+
+          &.left {
+            top: 10px;
+            left: 15px;
+          }
+
+          &.right {
+            bottom: 0px;
+            right: 15px;
+          }
+        }
+
+        .quote-text {
+          font-size: 24px;
+          font-weight: 600;
+          line-height: 1.6;
+          color: white;
+          margin: 0;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          letter-spacing: 0.5px;
+          white-space: nowrap;
+        }
+
+        .quote-decoration {
+          position: absolute;
+          bottom: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 60px;
+          height: 4px;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.6),
+            transparent
+          );
+          border-radius: 2px;
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          transition: all 0.3s ease;
+        }
+      }
     }
   }
   .content {
@@ -307,6 +391,7 @@ const submitDiary = async () => {
           gap: 10px;
         }
       }
+      padding: 16px;
     }
   }
 }

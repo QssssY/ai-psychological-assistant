@@ -376,20 +376,6 @@ request.post('/api/login', { username, password })
 
 ---
 
-## 📄 许可证
-
-[MIT](LICENSE) © 2024 塔塔AI心理助手
-
----
-
-## 📞 联系我们
-
-- **项目主页**: [https://github.com/yourusername/ai-psychological-assistant](https://github.com/yourusername/ai-psychological-assistant)
-- **问题反馈**: [Issues](https://github.com/yourusername/ai-psychological-assistant/issues)
-- **邮箱**: contact@example.com
-
----
-
 <p align="center">
   用 ❤️ 和 🤖 构建
 </p>
