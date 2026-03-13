@@ -2,7 +2,7 @@
   <div class="auth-layout">
     <div class="left-section">
       <div class="content">
-        <h1 class="title">AI 心理助手</h1>
+        <h1 class="title">塔塔AI 心理助手</h1>
         <p class="description">
           懂你未说的疲惫，接住你藏起的情绪，不敷衍，安安静静陪你说心事
         </p>

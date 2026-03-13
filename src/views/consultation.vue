@@ -252,6 +252,24 @@
                   ? "正在输入中..."
                   : msg.createdAt
               }}
+              <!-- AI消息播报按钮 -->
+              <el-button
+                v-if="
+                  msg.senderType === 2 &&
+                  !msg.isError &&
+                  msg.content &&
+                  tts.isSupported
+                "
+                @click.stop="playAIMessage(msg)"
+                :icon="tts.isPlayingMessage(msg.id) ? VideoPause : VideoPlay"
+                :type="tts.isPlayingMessage(msg.id) ? 'primary' : 'default'"
+                size="small"
+                text
+                class="tts-play-btn"
+                :title="tts.isPlayingMessage(msg.id) ? '停止播报' : '语音播报'"
+              >
+                {{ tts.isPlayingMessage(msg.id) ? "停止" : "播报" }}
+              </el-button>
             </div>
           </div>
         </div>
@@ -302,6 +320,20 @@ import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { RecycleScroller } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import SessionSkeleton from "@/components/skeleton/SessionSkeleton.vue";
+import { useTTS } from "@/composables/useTTS";
+import { VideoPlay, VideoPause } from "@element-plus/icons-vue";
+
+// TTS功能
+const tts = useTTS();
+
+// 播放AI消息
+const playAIMessage = (msg) => {
+  if (tts.isPlayingMessage(msg.id)) {
+    tts.stop();
+  } else {
+    tts.speak(msg.content, msg.id);
+  }
+};
 
 // 引入图标
 const iconUrl = new URL("@/assets/images/robot-fill.png", import.meta.url).href;
@@ -1233,10 +1265,28 @@ onMounted(() => {
             font-size: 12px;
             color: #999;
             margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .tts-play-btn {
+              padding: 2px 6px;
+              font-size: 11px;
+              height: 22px;
+
+              &:hover {
+                color: #fb923c;
+              }
+
+              &.el-button--primary {
+                color: #fb923c;
+              }
+            }
           }
         }
       }
     }
+
     .chat-input {
       border-top: 1px solid rgba(251, 146, 60, 0.1);
       padding: 16px 24px;

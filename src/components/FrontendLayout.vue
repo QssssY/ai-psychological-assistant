@@ -3,7 +3,7 @@
     <div class="navbar-container">
       <div class="brand-section">
         <img :src="iconUrl" alt="logo" width="50" height="45" />
-        <div class="brand-name">心理健康AI助手</div>
+        <div class="brand-name">塔塔AI心理助手</div>
       </div>
       <div class="nav-section">
         <router-link to="/" class="nav-link">首页</router-link>

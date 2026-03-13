@@ -9,7 +9,7 @@
       <div class="brand">
         <el-image :src="iconUrl" alt="logo" class="logo" />
         <div class="info-card" v-show="!isCollapsed">
-          <div class="brand-title">心理健康AI助手</div>
+          <div class="brand-title">塔塔AI心理助手</div>
           <div class="brand-subtitle">管理后台</div>
         </div>
       </div>
